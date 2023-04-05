@@ -5,8 +5,23 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
+var apiRouter = require('./routes/api');
+var bulletinRouter = require('./routes/bulletin/');
+var joinRouter = require('./routes/join/join');
+var subscribeRouter = require('./routes/bulletin/subscribe');
+var unsubscribeRouter = require('./routes/bulletin/unsubscribe');
+var singInRouter = require('./routes/account/signIn/');
+var logOutRouter = require('./routes/account/logout/');
+var deleteAccountRouter = require('./routes/account/deleteAccount/');
+var logInRouter = require('./routes/account/login/');
+var addItemRouter = require('./routes/cart/addItem/');
+var deleteItemRouter = require('./routes/cart/deleteItem/');
+var updateItemRouter = require('./routes/cart/updateItem/');
+var getCartRouter = require('./routes/cart/getItems/');
+var addTransactionRouter = require('./routes/transaction/add/');
+var getProductRouter = require('./routes/product/getProduct/');
+var getProductReviewsRouter = require('./routes/product/getProductReviews/');
+var getSimilarProductsRouter = require('./routes/product/getSimilarProducts/');
 var app = express();
 
 // view engine setup
@@ -20,7 +35,25 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/api', apiRouter);
+app.use('/api', bulletinRouter);
+app.use('/api/join', joinRouter);
+app.use('/api/bulletin', subscribeRouter);
+app.use('/api/bulletin',unsubscribeRouter);
+app.use('/api/account', singInRouter);
+app.use('/api/account', logOutRouter);
+app.use('/api/account', deleteAccountRouter);
+app.use('/api/account', logInRouter);
+app.use('/api/cart', addItemRouter);
+app.use('/api/cart', deleteItemRouter);
+app.use('/api/cart', updateItemRouter);
+app.use('/api/cart', getCartRouter);
+app.use('/api/transaction', addTransactionRouter);
+app.use('/api/product', getProductRouter);
+app.use('/api/product', getProductReviewsRouter);
+app.use('/api/product', getSimilarProductsRouter);
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -28,7 +61,7 @@ app.use(function(req, res, next) {
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function(err, req, res, next) {//Q: 
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -38,4 +71,9 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+app.listen(2000, function () {
+  console.log('Example app listening on port 2000!');
+});
+
 module.exports = app;
+
