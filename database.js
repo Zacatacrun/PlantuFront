@@ -3,12 +3,7 @@ var {database} = require('./keys');
 
 var {promisify} = require('util');
 
-var pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'plantu'
-});
+var pool = mysql.createPool(database);
 
 pool.getConnection((err, connection) => {
     if (err) {
