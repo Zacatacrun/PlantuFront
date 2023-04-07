@@ -1,9 +1,14 @@
 var mysql = require('mysql');
-var {database} = require('./keys');
 
 var {promisify} = require('util');
-
-var pool = mysql.createPool(database);
+require('dotenv').config(); 
+var credentials = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE
+};
+var pool = mysql.createPool(credentials);
 
 pool.getConnection((err, connection) => {
     if (err) {
