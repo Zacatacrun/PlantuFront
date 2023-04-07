@@ -17,6 +17,11 @@ contraseña VARCHAR(100),
 rol VARCHAR(20)
 );
 
+-- Creamos la tabla bulletin
+CREATE TABLE bulletin(
+	correo VARCHAR(100) PRIMARY KEY
+);
+
 CREATE TABLE categorias (
 id INT PRIMARY KEY AUTO_INCREMENT,
 nombre VARCHAR(50)
@@ -28,6 +33,7 @@ nombre VARCHAR(50),
 descripcion TEXT,
 imagen VARCHAR(200),
 vendedor_id INT,
+aceptado boolean,
 FOREIGN KEY (vendedor_id) REFERENCES usuarios(id)
 );
 
