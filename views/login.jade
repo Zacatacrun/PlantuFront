@@ -8,11 +8,11 @@ block content
      a(href='signIn')  Register Now.
      form(role='form', action='/login', method='post')
        .form-group
-         label(for='username') Username
-         input.form-control(type='text', id='user', name='username', placeholder='enter a username')
+         label(for='username') Nombre
+         input.form-control(type='text', id='user', name='nombre', placeholder='ingrese su nombre de usuario o correo')
        .form-group
-         label(for='password') Password
-         input.form-control(type='password', id='password', name='password', placeholder='enter a password')
-       button.btn.btn-primary(type='submit') Submit
+         label(for='password') Contraseña
+         input.form-control(type='password', id='password', name='contrasena', placeholder='ingrese su contraseña')
+       button.btn.btn-primary(type='submit') Subir
        &nbsp;
-       a.btn.btn-default(role='button', href='/') Cancel
+       a.btn.btn-default(role='button', href='/') Cancelar
