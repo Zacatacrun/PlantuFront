@@ -6,7 +6,6 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/api');
-var bulletinRouter = require('./routes/bulletin/');
 var joinRouter = require('./routes/join/join');
 var subscribeRouter = require('./routes/bulletin/subscribe');
 var unsubscribeRouter = require('./routes/bulletin/unsubscribe');
@@ -36,7 +35,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
-app.use('/api', bulletinRouter);
 app.use('/api/join', joinRouter);
 app.use('/api/bulletin', subscribeRouter);
 app.use('/api/bulletin',unsubscribeRouter);
