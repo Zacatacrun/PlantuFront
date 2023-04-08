@@ -3,8 +3,8 @@ const router = express.Router();
 const pool = require('../../../database');
 const { isEmail } = require('validator');
 
-router.get('/subscribe', function(req, res, next) {
-    const email = req.query.email;
+router.post('/subscribe', function(req, res, next) {
+    const email = req.body.email;
 
     // Validar que el correo sea válido
     if (!isEmail(email)) {
@@ -17,7 +17,7 @@ router.get('/subscribe', function(req, res, next) {
     }
 
     // Validar que el correo no esté ya registrado
-    pool.query('SELECT * FROM usuarios WHERE email = ?', [email], (err, results) => {
+    pool.query('SELECT * FROM bulletin WHERE correo = ?', [email], (err, results) => {
         if (err) {
             return res.json({
                 status: 0,
@@ -37,7 +37,7 @@ router.get('/subscribe', function(req, res, next) {
         }
 
         // Insertar el nuevo usuario en la base de datos
-        pool.query('INSERT INTO usuarios (email) VALUES (?)', [email], (err, results) => {
+        pool.query('INSERT INTO bulletin (correo) VALUES (?)', [email], (err, results) => {
             if (err) {
                 return res.json({
                     status: 0,
