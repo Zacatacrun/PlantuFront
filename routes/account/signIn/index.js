@@ -13,9 +13,11 @@ router.post('/singIn', async (req, res, next)=> {
   const correo = req.body.correo;
   const rol = req.body.rol;
   let passwordHash = await bcryptjs.hash(password, 10);
+  //verificar que los datos no esten vacios, verfificar el formato valido del correo, verificar que el correo no este registrado
   pool.query('INSERT INTO usuarios (nombre, password, correo, rol) VALUES ($1, $2, $3, $4)', [nombre, passwordHash, correo, rol], (err, result) => {
     if (err) {
       console.log(err);
+      res.send('error de registro');
     }
     res.send('registro exitoso');
   });
