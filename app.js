@@ -3,6 +3,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var dotenv = require('dotenv');
+var session = require('express-session');
 
 var indexRouter = require('./routes/index');
 var apiRouter = require('./routes/api');
@@ -68,10 +70,16 @@ app.use(function(err, req, res, next) {//Q:
   res.status(err.status || 500);
   res.render('error');
 });
+app.use(session({
+  secret: 'secret',
+  resave: true,
+  saveUninitialized: true
+}));
 
 app.listen(2000, function () {
   console.log('Example app listening on port 2000!');
 });
+dotenv.config({path:'./.env'});
 
 module.exports = app;
 
