@@ -105,3 +105,7 @@ dist
 
 # no hay registro de las variables de emtorno
 .env
+
+# lock files for yarn and npm 
+*.lock
+package-lock.json
