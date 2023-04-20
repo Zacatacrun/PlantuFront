@@ -1,25 +1,91 @@
-var express = require('express');
-var router = express.Router();
-var bcryptjs = require('bcryptjs');
+const express = require('express');
+const router = express.Router();
 const pool = require('../../../database');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { isEmail } = require('validator');
+
 /* GET home page. */
 router.get('/singIn', function(req, res, next) {
-  res.render('signIn');
+  res.render('index', { title: 'singIn' });
 });
 
-router.post('/singIn', async (req, res, next)=> {
-  const nombre = req.body.nombre;
-  const password = req.body.contrasena;
-  const correo = req.body.correo;
-  const rol = req.body.rol;
-  let passwordHash = await bcryptjs.hash(password, 10);
-  //verificar que los datos no esten vacios, verfificar el formato valido del correo, verificar que el correo no este registrado
-  pool.query('INSERT INTO usuarios (nombre, password, correo, rol) VALUES ($1, $2, $3, $4)', [nombre, passwordHash, correo, rol], (err, result) => {
+router.post('/singIn', function(req, res, next) {
+  const { userName, userCorreo, userContraseña, userRol } = req.body;
+  // Verificar que los campos no estén vacíos
+  if (!userName || !userCorreo || !userContraseña || !userRol) {
+    return res.json({
+        status: 0,
+        data: [],
+        warnings: ['Faltan campos obligatorios'],
+        info: 'Error interno, intentalo de nuevo'
+    });
+  }
+
+  // Validar que el correo sea válido
+  if (!isEmail(userCorreo)) {
+    return res.json({
+        status: 0,
+        data: [],
+        warnings: ['El correo electrónico no es válido'],
+        info: 'Error interno, intentalo de nuevo'
+    });
+  }
+
+  // Validar que el correo no esté ya registrado
+  pool.query('SELECT * FROM usuarios WHERE correo = ?', [userCorreo], (err, results) => {
     if (err) {
-      console.log(err);
-      res.send('error de registro');
+        return res.json({
+            status: 0,
+            data: [],
+            warnings: ['Error interno en la base de datos'],
+            info: 'Error interno, intentalo de nuevo'
+        });
     }
-    res.send('registro exitoso');
+
+    if (results.length > 0) {
+        return res.json({
+            status: 0,
+            data: [],
+            warnings: ['El correo electrónico ya está registrado'],
+            info: 'Error interno, intentalo de nuevo'
+        });
+    }
+
+    // Encriptar la contraseña
+    bcrypt.hash(password, 10, function(err, hash) {
+      if (err) {
+          return res.json({
+              status: 0,
+              data: [],
+              warnings: ['Error interno al encriptar la contraseña'],
+              info: 'Error interno, intentalo de nuevo'
+          });
+      }
+
+      // Insertar el nuevo usuario en la base de datos
+      pool.query('INSERT INTO users (userName, email, password, userRol) VALUES (?, ?, ?, ?)', [userName, email, hash, userRol], (err, results) => {
+          if (err) {
+              return res.json({
+                  status: 0,
+                  data: [],
+                  warnings: ['Error interno en la base de datos'],
+                  info: 'Error interno, intentalo de nuevo'
+              });
+          }
+
+          // Generar el token de autenticación
+          const token = jwt.sign({ email: email }, 'secretkey', { expiresIn: '1h' });
+
+          return res.json({
+              status: 1,
+              data: [],
+              warnings: [],
+              info: 'Registro exitoso',
+              token: token
+          });
+      });
+    });
   });
 });
 
