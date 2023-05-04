@@ -31,7 +31,7 @@ router.post('/subscribe', function(req, res, next) {
             return res.json({
                 status: 0,
                 data: [],
-                warnings: ['El correo electrónico ya está registrado'],
+                warnings: [],
                 info: 'Gracias por suscribirte a nuestro boletín'
             });
         }

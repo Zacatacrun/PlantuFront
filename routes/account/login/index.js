@@ -7,7 +7,7 @@ const { isEmail } = require('validator');
 
 /* GET home page. */
 router.get('/login', function(req, res, next) {
-  res.render('index', { title: 'login' });
+  res.render('index', { title: 'loginaaaaa' });
 });
 
 router.post('/login', function(req, res, next) {
@@ -49,8 +49,10 @@ router.post('/login', function(req, res, next) {
     }
 
     // Verificar la contraseña
+  
+    
     const userObj = results[0];
-    bcryptjs.compare(password, userObj.password, function(err, result) {
+    bcryptjs.compare(password, userObj.contraseña, function(err, result) {
       if (err) {
         console.error(err);
         return res.status(500).json({
@@ -81,6 +83,7 @@ router.post('/login', function(req, res, next) {
       });
     });
   });
+  
 });
 
 module.exports = router;
