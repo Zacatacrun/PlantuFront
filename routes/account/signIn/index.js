@@ -6,14 +6,14 @@ const jwt = require('jsonwebtoken');
 const { isEmail } = require('validator');
 
 /* GET home page. */
-router.get('/singIn', function(req, res, next) {
-  res.render('index', { title: 'singIn' });
+router.get('/signIn', function(req, res, next) {
+  res.render('index', { title: 'signIn' });
 });
 
-router.post('/singIn', function(req, res, next) {
-  const { userName, userCorreo, userContraseña, userRol } = req.body;
+router.post('/signIn', function(req, res, next) {
+  const { name, email, password, rol } = req.body;
   // Verificar que los campos no estén vacíos
-  if (!userName || !userCorreo || !userContraseña || !userRol) {
+  if (!name || !email || !password || !rol) {
     return res.json({
         status: 0,
         data: [],
@@ -23,7 +23,7 @@ router.post('/singIn', function(req, res, next) {
   }
 
   // Validar que el correo sea válido
-  if (!isEmail(userCorreo)) {
+  if (!isEmail(email)) {
     return res.json({
         status: 0,
         data: [],
@@ -33,7 +33,7 @@ router.post('/singIn', function(req, res, next) {
   }
 
   // Validar que el correo no esté ya registrado
-  pool.query('SELECT * FROM usuarios WHERE correo = ?', [userCorreo], (err, results) => {
+  pool.query('SELECT * FROM usuarios WHERE correo = ?', [email], (err, results) => {
     if (err) {
         return res.json({
             status: 0,
@@ -48,7 +48,7 @@ router.post('/singIn', function(req, res, next) {
             status: 0,
             data: [],
             warnings: ['El correo electrónico ya está registrado'],
-            info: 'Error interno, intentalo de nuevo'
+            info: 'Gracias por registrarce'
         });
     }
 
@@ -64,7 +64,7 @@ router.post('/singIn', function(req, res, next) {
       }
 
       // Insertar el nuevo usuario en la base de datos
-      pool.query('INSERT INTO users (userName, email, password, userRol) VALUES (?, ?, ?, ?)', [userName, email, hash, userRol], (err, results) => {
+      pool.query('INSERT INTO usuarios (nombre, correo, contraseña, rol) VALUES (?, ?, ?, ?)', [name, email, hash, rol], (err, results) => {
           if (err) {
               return res.json({
                   status: 0,
