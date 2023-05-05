@@ -1,31 +1,35 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var dotenv = require('dotenv');
-var session = require('express-session');
+let cors = require('cors')
 
-var indexRouter = require('./routes/index');
-var apiRouter = require('./routes/api');
-var joinRouter = require('./routes/join/join');
-var subscribeRouter = require('./routes/bulletin/subscribe');
-var unsubscribeRouter = require('./routes/bulletin/unsubscribe');
-var singInRouter = require('./routes/account/signIn/');
-var logOutRouter = require('./routes/account/logout/');
-var deleteAccountRouter = require('./routes/account/deleteAccount/');
-var logInRouter = require('./routes/account/login/');
-var addItemRouter = require('./routes/cart/addItem/');
-var deleteItemRouter = require('./routes/cart/deleteItem/');
-var updateItemRouter = require('./routes/cart/updateItem/');
-var getCartRouter = require('./routes/cart/getItems/');
-var addTransactionRouter = require('./routes/transaction/add/');
-var getProductRouter = require('./routes/product/getProduct/');
-var updatedProductRouter = require('./routes/product/updateProduct/');
-var getProductReviewsRouter = require('./routes/product/getProductReviews/');
-var getSimilarProductsRouter = require('./routes/product/getSimilarProducts/');
+let createError = require('http-errors');
+let express = require('express');
+let path = require('path');
+let cookieParser = require('cookie-parser');
+let logger = require('morgan');
+let dotenv = require('dotenv');
+let session = require('express-session');
 
-var app = express();
+let indexRouter = require('./routes/index');
+let apiRouter = require('./routes/api');
+let joinRouter = require('./routes/join/join');
+let subscribeRouter = require('./routes/bulletin/subscribe');
+let unsubscribeRouter = require('./routes/bulletin/unsubscribe');
+let singInRouter = require('./routes/account/signIn/');
+let logOutRouter = require('./routes/account/logout/');
+let deleteAccountRouter = require('./routes/account/deleteAccount/');
+let logInRouter = require('./routes/account/login/');
+let addItemRouter = require('./routes/cart/addItem/');
+let deleteItemRouter = require('./routes/cart/deleteItem/');
+let updateItemRouter = require('./routes/cart/updateItem/');
+let getCartRouter = require('./routes/cart/getItems/');
+let addTransactionRouter = require('./routes/transaction/add/');
+let getProductRouter = require('./routes/product/getProduct/');
+let addProductRouter = require('./routes/product/addProduct/');
+let updatedProductRouter = require('./routes/product/updateProduct/');
+let getProductReviewsRouter = require('./routes/product/getProductReviews/');
+let getSimilarProductsRouter = require('./routes/product/getSimilarProducts/');
+
+
+let app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -36,7 +40,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(cors())
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
 app.use('/api/join', joinRouter);
@@ -55,6 +59,7 @@ app.use('/api/product', getProductRouter);
 app.use('/api/product', getProductReviewsRouter);
 app.use('/api/product', getSimilarProductsRouter);
 app.use('/api/product', updatedProductRouter);
+app.use('/api/product', addProductRouter);
 
 
 
