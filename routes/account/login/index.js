@@ -76,7 +76,7 @@ router.post('/login', function(req, res, next) {
       const token = jwt.sign({ user: userObj[queryUser] }, 'secretkey', { expiresIn: '1h' });
       return res.status(200).json({
         status: 1,
-        data: [],
+        data: [userObj],
         warnings: [],
         info: 'Inicio de sesión exitoso',
         token: token
