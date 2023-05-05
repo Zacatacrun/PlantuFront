@@ -21,8 +21,10 @@ var updateItemRouter = require('./routes/cart/updateItem/');
 var getCartRouter = require('./routes/cart/getItems/');
 var addTransactionRouter = require('./routes/transaction/add/');
 var getProductRouter = require('./routes/product/getProduct/');
+var updatedProductRouter = require('./routes/product/updateProduct/');
 var getProductReviewsRouter = require('./routes/product/getProductReviews/');
 var getSimilarProductsRouter = require('./routes/product/getSimilarProducts/');
+
 var app = express();
 
 // view engine setup
@@ -52,6 +54,7 @@ app.use('/api/transaction', addTransactionRouter);
 app.use('/api/product', getProductRouter);
 app.use('/api/product', getProductReviewsRouter);
 app.use('/api/product', getSimilarProductsRouter);
+app.use('/api/product', updatedProductRouter);
 
 
 

@@ -1,12 +1,30 @@
-var express = require('express');
-var router = express.Router();
-var session = require('express-session');
+const express = require('express');
+const router = express.Router();
 
-/* GET home page. */
-router.get('/logout', function(req, res, next) {
-  req.session.destroy(()=>{
-    res.redirect('/');
-  });
+router.post('/logout', async (req, res) => {
+  const id = req.params.id;
+
+
+  // Realizar el logout
+  try {
+    // Realizar acciones necesarias para cerrar sesión
+    // ...
+
+    return res.json({
+      status: 1,
+      data: [],
+      warnings: [],
+      info: 'Logout exitoso'
+    });
+  } catch (err) {
+    console.error(err);
+    return res.json({
+      status: 0,
+      data: [],
+      warnings: [],
+      info: 'Error de logout'
+    });
+  }
 });
 
 module.exports = router;

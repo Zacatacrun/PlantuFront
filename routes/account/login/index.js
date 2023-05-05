@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var bcryptjs = require('bcryptjs');
-const pool = require('../../../database');
-const jwt = require('jsonwebtoken');
-const { isEmail } = require('validator');
+var pool = require('../../../database');
+var jwt = require('jsonwebtoken');
+var { isEmail } = require('validator');
 
 /* GET home page. */
 router.get('/login', function(req, res, next) {
