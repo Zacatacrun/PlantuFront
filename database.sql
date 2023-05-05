@@ -30,6 +30,7 @@ nombre VARCHAR(50)
 CREATE TABLE viveros (
 id INT PRIMARY KEY AUTO_INCREMENT,
 nombre VARCHAR(50),
+correo VARCHAR(50),
 descripcion TEXT,
 imagen VARCHAR(200),
 vendedor_id INT,
