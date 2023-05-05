@@ -1,87 +1,73 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
+const pool = require('../../../database');
+const { isEmail } = require('validator');
 
-
-// Crear pool de conexiones a la base de datos
-const pool = mysql.createPool(require('../../../database'));
 router.post('/join', (req, res) => {
-/*
-const { viveroName, viveroDescripcion,viveroVendedorID } = req.body;
-const queryUsuario = `SELECT * FROM usuarios WHERE id=${viveroVendedorID}`;
-// Obtener el ID del usuario
-  pool.query(queryUsuario, (error, resultsUsuario) => {
-    if (error) {
-      console.error(error);
-      return res.json({
-        status: 0,
-        data: [],
-        warnings: ['Error en la base de datos'],
-        info: 'Error enviando la solicitud, intentalo de nuevo'
-      });
-    }
+  const { viveroName, viveroEmail } = req.body;
 
-if (resultsUsuario.length === 0) {
-  return res.json({
-    status: 0,
-    data: [],
-    warnings: ['El usuario ingresado no existe'],
-    info: 'Error enviando la solicitud, intentalo de nuevo'
-  });
-}
-
-const queryVivero = `SELECT * FROM viveros WHERE nombre='${viveroName}'`;
-pool.query(queryVivero, (error, resultsVivero) => {
-  if (error) {
-    console.error(error);
-    return res.json({
+  // Validar campos obligatorios
+  if (!viveroName || !viveroEmail) {
+    return res.status(400).json({
       status: 0,
       data: [],
-      warnings: ['Error en la base de datos'],
+      warnings: ['Faltan campos obligatorios'],
       info: 'Error enviando la solicitud, intentalo de nuevo'
     });
   }
 
-  if (resultsVivero.length > 0) {
-    return res.json({
+  // Validar correo electrónico
+  if (!isEmail(viveroEmail)) {
+    return res.status(400).json({
       status: 0,
       data: [],
-      warnings: ['El nombre de vivero ingresado ya está en uso'],
+      warnings: ['Correo electrónico inválido'],
       info: 'Error enviando la solicitud, intentalo de nuevo'
     });
   }
 
-  // Registrar el vivero en la base de datos
-  const insertQuery = `INSERT INTO viveros (nombre, descripcion, vendedor_id) VALUES ('${viveroName}', '${viveroDescripcion}', '${viveroVendedorID}')`;
-  pool.query(insertQuery, (error, results) => {
-    if (error) {
-      console.error(error);
-      return res.json({
+  // Verificar si el vivero ya está registrado
+  pool.query(`SELECT * FROM viveros WHERE correo = ?`, [viveroEmail], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
         status: 0,
         data: [],
-        warnings: ['Error en la base de datos'],
-        info: 'Error enviando la solicitud, intentalo de nuevo'
+        warnings: ['Error interno en la base de datos'],
+        info: 'Error interno, intentalo de nuevo'
       });
     }
 
-    // Enviar respuesta exitosa
-    return res.json({
-      status: 1,
-      data: {
-        id: results.insertId,
-        name: viveroName,
-        descripcion: viveroDescripcion,
-        vendedor_id: viveroVendedorID
-      },
-      warnings: [],
-      info: 'Tu solicitud ha sido enviada, nos contactaremos pronto contigo'
+    if (results.length === 0) {
+      return res.status(404).json({
+        status: 0,
+        data: [],
+        warnings: ['El usuario no está registrado'],
+        info: 'Error interno, intentalo de nuevo'
+      });
+    }
+
+    // Si todo está bien, registrar el vivero
+    pool.query(`INSERT INTO viveros (nombre, correo) VALUES (?, ?)`, [viveroName, viveroEmail], (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          status: 0,
+          data: [],
+          warnings: ['Error interno en la base de datos'],
+          info: 'Error enviando la solicitud, intentalo de nuevo'
+        });
+      }
+
+      return res.status(200).json({
+        status: 1,
+        data: [],
+        warnings: [],
+        info: 'Tu solicitud ha sido enviada, nos contactaremos pronto contigo'
+      });
     });
   });
-});
-
-
-});
-*/
 });
 
 module.exports = router;
