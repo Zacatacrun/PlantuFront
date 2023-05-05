@@ -10,7 +10,7 @@ router.delete('/unsubscribe', (req, res) => {
 
   // Validar el correo electrónico
   if (!validator.isEmail(email)) {
-    return res.json({
+    return res.status(400).json({
       status: 0,
       data: [],
       warnings: [],
@@ -21,7 +21,7 @@ router.delete('/unsubscribe', (req, res) => {
   // Verificar si el correo electrónico está registrado en la tabla "bulletin"
   pool.query('SELECT * FROM bulletin WHERE correo = ?', [email], (error, results) => {
     if (error) {
-      return res.json({
+      return res.status(500).json({
         status: 0,
         data: [],
         warnings: [],
@@ -31,7 +31,7 @@ router.delete('/unsubscribe', (req, res) => {
 
     // Si el correo electrónico no está registrado, devolver un error
     if (results.length === 0) {
-      return res.json({
+      return res.status(404).json({
         status: 0,
         data: [],
         warnings: [],
@@ -42,7 +42,7 @@ router.delete('/unsubscribe', (req, res) => {
     // Eliminar el correo electrónico de la tabla "bulletin"
     pool.query('DELETE FROM bulletin WHERE correo = ?', [email], (error, results) => {
       if (error) {
-        return res.json({
+        return res.status(500).json({
           status: 0,
           data: [],
           warnings: [],
@@ -51,7 +51,7 @@ router.delete('/unsubscribe', (req, res) => {
       }
 
       // Devolver una respuesta exitosa
-      return res.json({
+      return res.status(200).json({
         status: 1,
         data: [],
         warnings: [],

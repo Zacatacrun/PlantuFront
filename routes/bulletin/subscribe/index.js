@@ -8,7 +8,7 @@ router.post('/subscribe', function(req, res, next) {
 
     // Validar que el correo sea válido
     if (!isEmail(email)) {
-        return res.json({
+        return res.status(400).json({
             status: 0,
             data: [],
             warnings: ['El correo electrónico no es válido'],
@@ -19,7 +19,7 @@ router.post('/subscribe', function(req, res, next) {
     // Validar que el correo no esté ya registrado
     pool.query('SELECT * FROM bulletin WHERE correo = ?', [email], (err, results) => {
         if (err) {
-            return res.json({
+            return res.status(500).json({
                 status: 0,
                 data: [],
                 warnings: ['Error interno en la base de datos'],
@@ -28,7 +28,7 @@ router.post('/subscribe', function(req, res, next) {
         }
 
         if (results.length > 0) {
-            return res.json({
+            return res.status(409).json({
                 status: 0,
                 data: [],
                 warnings: [],
@@ -39,7 +39,7 @@ router.post('/subscribe', function(req, res, next) {
         // Insertar el nuevo usuario en la base de datos
         pool.query('INSERT INTO bulletin (correo) VALUES (?)', [email], (err, results) => {
             if (err) {
-                return res.json({
+                return res.status(500).json({
                     status: 0,
                     data: [],
                     warnings: ['Error interno en la base de datos'],
@@ -47,7 +47,7 @@ router.post('/subscribe', function(req, res, next) {
                 });
             }
 
-            return res.json({
+            return res.status(201).json({
                 status: 1,
                 data: [],
                 warnings: [],
