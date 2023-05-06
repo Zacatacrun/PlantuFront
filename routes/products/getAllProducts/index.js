@@ -8,7 +8,7 @@ router.get('/getAllProducts', async (req, res) => {
     const query = `SELECT * FROM plantas;`;
     const rows = await pool.query(query);
     // Validar que no esté vacío
-    if (!Object.keys(rows).length) {
+    if (!rows||!Object.keys(rows).length) {
       return res.status(404).json({
         status: 0,
         data: [],
