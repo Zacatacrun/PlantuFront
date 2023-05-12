@@ -2,13 +2,11 @@ var express = require('express');
 var router = express.Router();
 var bcryptjs = require('bcryptjs');
 var pool = require('../../../database');
+//manejo tokens en base de datos
+var tokens = require('../../../tokens');
 var jwt = require('jsonwebtoken');
 var { isEmail } = require('validator');
 
-/* GET home page. */
-router.get('/login', function(req, res, next) {
-  res.render('index', { title: 'loginaaaaa' });
-});
 
 router.post('/login', function(req, res, next) {
   const { user, password } = req.body;
@@ -73,7 +71,17 @@ router.post('/login', function(req, res, next) {
       }
 
       // Generar el token de autenticación
-      const token = jwt.sign({ user: userObj[queryUser] }, 'secretkey', { expiresIn: '1h' });
+      const token = jwt.sign({ user: userObj[queryUser] }, 'secretkey', { expiresIn: '1d' });
+      // res error if token is not saved
+      if (!tokens.saveToken(pool, userObj[queryUser], token)) {
+        return res.status(500).json({
+          status: 0,
+          data: [],
+          warnings: ['Error interno al guardar el token'],
+          info: 'Error interno, intentalo de nuevo',
+          token:''
+        });
+      }
       return res.status(200).json({
         status: 1,
         data: [userObj],
