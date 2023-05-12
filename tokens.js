@@ -84,8 +84,32 @@ async function validateToken(pool,token) {
         return false;
     }
 }
-
+//crea una funcion que reciba un token y lo valide, si es valido borralo de la basse de datos y retorna true, si no es valido retorna false
+async function deleteToken(pool,token) {
+    try {
+        // Buscamos el token en la base de datos
+        const rows = await pool.query('SELECT * FROM tokens WHERE token = ?', [token]);
+        //convert the rows to an json object
+        const tokenObj = JSON.parse(JSON.stringify(rows));
+        // Validamos que el token exista
+        if (rows.length === 0) {
+            //throw new Error('El token no existe en la base de datos');
+            //imprime el error en la consola
+            console.log('El token no existe en la base de datos');
+            return false;
+        }
+        //get the id of the token from the json object
+        const tokenId = tokenObj[0].id;
+        //delete the token from the database
+        await pool.query('DELETE FROM tokens WHERE id = ?', [tokenId]);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
   module.exports = {
     saveToken,
-    validateToken
+    validateToken,
+    deleteToken
   };
