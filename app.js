@@ -17,6 +17,7 @@ let singInRouter = require('./routes/account/signIn/');
 let logOutRouter = require('./routes/account/logout/');
 let deleteAccountRouter = require('./routes/account/deleteAccount/');
 let logInRouter = require('./routes/account/login/');
+let validateEmailRouter = require('./routes/account/validateEmail');
 let addItemRouter = require('./routes/cart/addItem/');
 let deleteItemRouter = require('./routes/cart/deleteItem/');
 let updateItemRouter = require('./routes/cart/updateItem/');
@@ -24,6 +25,7 @@ let getCartRouter = require('./routes/cart/getItems/');
 let addTransactionRouter = require('./routes/transaction/add/');
 let getProductRouter = require('./routes/product/getProduct/');
 let addProductRouter = require('./routes/product/addProduct/');
+
 
 let updatedProductRouter = require('./routes/product/updateProduct/');
 let getProductReviewsRouter = require('./routes/product/getProductReviews/');
@@ -36,6 +38,8 @@ let app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+
+
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -52,6 +56,7 @@ app.use('/api/account', singInRouter);
 app.use('/api/account', logOutRouter);
 app.use('/api/account', deleteAccountRouter);
 app.use('/api/account', logInRouter);
+app.use('/api/account',validateEmailRouter);
 app.use('/api/cart', addItemRouter);
 app.use('/api/cart', deleteItemRouter);
 app.use('/api/cart', updateItemRouter);
