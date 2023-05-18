@@ -13,8 +13,15 @@ CREATE TABLE usuarios (
 id INT PRIMARY KEY AUTO_INCREMENT,
 nombre VARCHAR(50),
 correo VARCHAR(50),
+contraseña VARCHAR(100)
+);
+
+CREATE TABLE porValidar (
+id INT PRIMARY KEY AUTO_INCREMENT,
+nombre VARCHAR(50),
+correo VARCHAR(50),
 contraseña VARCHAR(100),
-rol VARCHAR(20)
+token VARCHAR(100)
 );
 
 -- Creamos la tabla bulletin
