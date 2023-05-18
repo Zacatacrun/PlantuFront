@@ -1,14 +1,41 @@
-var express = require('express');
-var router = express.Router();
-var bcryptjs = require('bcryptjs');
-var pool = require('../../../database');
+const express = require('express');
+const router = express.Router();
+const bcryptjs = require('bcryptjs');
+const pool = require('../../../database');
 //manejo tokens en base de datos
-var tokens = require('../../../tokens');
-var jwt = require('jsonwebtoken');
-var { isEmail } = require('validator');
+const tokens = require('../../../tokens');
+const jwt = require('jsonwebtoken');
+const { isEmail } = require('validator');
+const validator = require('validator');
+const { body, validationResult } = require('express-validator');
 
+router.post('/login', [
+    // Validación de campos utilizando express-validator
+    body('user')
+    .notEmpty().withMessage('El campo usuario es obligatorio')
+    .isString().withMessage('El usuario debe ser una cadena de caracteres')
+    .trim()
+    .isLength({ max: 50 }).withMessage('El usuario no puede tener más de 50 caracteres')
+    .escape(),
+    body('password')
+    .notEmpty().withMessage('El campo contraseña es obligatorio')
+    .isString().withMessage('La contraseña debe ser una cadena de caracteres')
+    .trim()
+    .isLength({ max: 100 }).withMessage('La contraseña no puede tener más de 50 caracteres')
+    .escape()
+  ], function(req, res, next) {
 
-router.post('/login', function(req, res, next) {
+    // Verificar si existen errores de validación
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        status: 0,
+        data: [],
+        warnings: errors.array().map(e => e.msg),
+        info: 'Error interno, intentalo de nuevo'
+      });
+    }
+
   const { user, password } = req.body;
   
   // Validar que los campos no estén vacíos
@@ -47,8 +74,6 @@ router.post('/login', function(req, res, next) {
     }
 
     // Verificar la contraseña
-  
-    
     const userObj = results[0];
     bcryptjs.compare(password, userObj.contraseña, function(err, result) {
       if (err) {
