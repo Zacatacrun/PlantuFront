@@ -1,80 +1,80 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const pool = require('../../../database');
-const { isEmail } = require('validator');
+const { body, validationResult } = require('express-validator');
 
-/* GET home page. */
 router.get('/getItems', function(req, res, next) {
-  res.render('index', { title: 'getItems' });
+    res.render('index', { title: 'updateItem' });
 });
 
-router.post('/getItems', function(req, res, next) {
-  const {user} = req.body;
-  const queryUser = 'nombre'; // campo utilizado para consultar al usuario
-
-  // Validar que el campo no esté vacío
-  if (!user) {
-    return res.status(400).json({
+router.post('/getItems', [
+  // Validación y sanitización de campos
+  body('idUsuario')
+    .notEmpty().withMessage('El campo id usuario es obligatorio')
+    .isInt().withMessage('debe ser un número entero')
+    .toInt(),
+  body('*').trim().escape(),
+], async (req, res) => {
+  // Verificar si existen errores de validación
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+      return res.status(400).json({
       status: 0,
       data: [],
-      warnings: ['Faltan campos obligatorios'],
-      info: 'Error interno, intentalo de nuevo'
-    });
+      warnings: errors.array().map(e => e.msg),
+      info: 'Error interno, inténtalo de nuevo'
+      });
   }
+  const {idUsuario} = req.body;
 
-  // Validar que el usuario esté registrado
-  pool.query(`SELECT * FROM usuarios WHERE ${queryUser} = ?`, [user], (err, results) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({
+  try {
+    // Verificar si el usuario está autenticado
+    const user = await pool.query('SELECT * FROM usuarios WHERE id = ?', [idUsuario]);
+    if (user.length === 0) {
+      return res.status(401).json({
         status: 0,
         data: [],
-        warnings: ['Error interno en la base de datos'],
-        info: 'Error interno, intentalo de nuevo'
+        warnings: ['Usuario no autenticado'],
+        info: 'Error interno, inténtalo de nuevo'
       });
     }
 
-    if (results.length === 0) {
-      return res.status(404).json({
-        status: 0,
-        data: [],
-        warnings: ['El usuario no está registrado'],
-        info: 'Error interno, intentalo de nuevo'
-      });
-    }
+    // Obtener la lista de productos del carrito asociados al usuario
+    const productos = await pool.query(
+      `SELECT p.*
+        FROM plantas p
+        INNER JOIN carro c ON p.id = c.planta_id
+        WHERE c.usuario_id = ?`,
+      [idUsuario]
+    );
     
-    // Obtener los productos del carrito
-    pool.query(`SELECT carro.planta_id FROM carro JOIN plantas ON carro.planta_id = plantas.id WHERE carro.usuario_id = ?`, [results[0].id], (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({
-          status: 0,
-          data: [],
-          warnings: ['Error interno en la base de datos'],
-          info: 'Error interno, intentalo de nuevo'
-        });
-      }
-
-      // Validar que existan productos asociados al usuario
-      if (results.length === 0) {
+    if (productos.length === 0) {
+      return res.json({
+        status: 0,
+        data: [],
+        info: 'No hay productos en el carrito',
+        warnings: []
+      });
+    } else {
         return res.status(200).json({
           status: 1,
-          data: [],
+          data: productos,
           warnings: [],
-          info: 'El usuario no tiene productos en su carrito'
+          info: 'Lista de productos del carrito'
         });
-      }
-
-      // Devolver los productos obtenidos
-      const productos = results.map((row) => row.planta_id);
-      return res.status(200).json({
-        status: 1,
-        data: productos,
-        warnings: [],
-        info: 'Operación exitosa'
-      });
+    }
+  }
+  catch (err) {
+    return res.status(500).json({
+      status: 0,
+      data: [],
+      warnings: ['Error interno en la base de datos'],
+      info: 'Error interno, inténtalo de nuevo'
     });
-  });
+  }
 });
 
 module.exports = router;
+
+
+
