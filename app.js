@@ -23,10 +23,9 @@ let deleteItemRouter = require('./routes/cart/deleteItem/');
 let updateItemRouter = require('./routes/cart/updateItem/');
 let getCartRouter = require('./routes/cart/getItems/');
 let addTransactionRouter = require('./routes/transaction/add/');
+let getTransactionRouter = require('./routes/transaction/getTransaction/');
 let getProductRouter = require('./routes/product/getProduct/');
 let addProductRouter = require('./routes/product/addProduct/');
-
-
 let updatedProductRouter = require('./routes/product/updateProduct/');
 let getProductReviewsRouter = require('./routes/product/getProductReviews/');
 let getSimilarProductsRouter = require('./routes/product/getSimilarProducts/');
@@ -62,6 +61,7 @@ app.use('/api/cart', deleteItemRouter);
 app.use('/api/cart', updateItemRouter);
 app.use('/api/cart', getCartRouter);
 app.use('/api/transaction', addTransactionRouter);
+app.use('/api/transaction', getTransactionRouter);
 app.use('/api/product', getProductRouter);
 app.use('/api/product', getProductReviewsRouter);
 app.use('/api/product', getSimilarProductsRouter);
