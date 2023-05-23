@@ -6,7 +6,17 @@ SET time_zone = "+00:00";
 
 CREATE DATABASE PLANTU;
 USE PLANTU;
-
+-- tokens tiene token y id de usuario
+CREATE TABLE tokens (
+id INT PRIMARY KEY AUTO_INCREMENT,
+token VARCHAR(300),
+usuario_id INT,
+fecha_creacion TIMESTAMP,
+fecha_expiracion TIMESTAMP,
+FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+--crea un alter table para modificar token y volverlo varchar de 300
+ALTER TABLE tokens MODIFY token VARCHAR(300);
 
 -- Creamos la tabla de usuarios
 CREATE TABLE usuarios (
@@ -15,6 +25,8 @@ nombre VARCHAR(50),
 correo VARCHAR(50),
 contraseña VARCHAR(100)
 );
+--modifica la tabla usuario, agregale rol, un varchar de 10
+ALTER TABLE usuarios ADD rol VARCHAR(10);
 
 CREATE TABLE porValidar (
 id INT PRIMARY KEY AUTO_INCREMENT,
