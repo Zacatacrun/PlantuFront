@@ -29,7 +29,6 @@ let addProductRouter = require('./routes/product/addProduct/');
 let updatedProductRouter = require('./routes/product/updateProduct/');
 let getProductReviewsRouter = require('./routes/product/getProductReviews/');
 let getSimilarProductsRouter = require('./routes/product/getSimilarProducts/');
-let getUnitCRouter =require('./routes/products/getUnitC');
 let getAllProductsRouter = require('./routes/products/getAllProducts/');
 let getViverosAndProductsRouter = require('./routes/products/getViverosAndProducts/');
 let app = express();
@@ -67,7 +66,6 @@ app.use('/api/product', getProductReviewsRouter);
 app.use('/api/product', getSimilarProductsRouter);
 app.use('/api/product', updatedProductRouter);
 app.use('/api/product', addProductRouter);
-app.use('/api/products',getUnitCRouter);
 app.use('/api/products', getAllProductsRouter);
 app.use('/api/products', getViverosAndProductsRouter);
 
