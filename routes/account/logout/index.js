@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const token = require('../../../tokens');
 const pool = require('../../../database');
+//create a post request /file that show the request
+router.post('/file', (req, res) => {
+  //show the request, files, body, headers
+  console.log(req.body);
+  console.log(req.files);
+  console.log(req.headers);
+});
+
 
 router.post('/logout', async (req, res) => {
   console.log(req.body);

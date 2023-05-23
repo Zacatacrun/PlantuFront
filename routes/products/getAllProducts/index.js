@@ -26,8 +26,8 @@ router.get('/getAllProducts', async (req, res) => {
       stock: row.stock,
       imagen: row.imagen,
       categoria: {
-        id: row.categoria_id,
-        nombre: row.categoria_nombre
+      id: row.categoria_id,
+      nombre: row.categoria_nombre
       },
       vivero: {
         id: row.vivero_id,
