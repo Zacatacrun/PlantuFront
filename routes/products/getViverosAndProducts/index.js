@@ -50,6 +50,7 @@ router.get('/getViverosAndProducts', async(req, res) => {
         vendedor_id: planta.vendedor_id,
         precio: planta.precio,
         stock: planta.stock,
+        imagen: planta.imagen,
         categoria_id: planta.categoria_id,
         vivero_id: planta.vivero_id,
       });
