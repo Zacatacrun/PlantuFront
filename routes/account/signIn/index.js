@@ -5,56 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { isEmail } = require('validator');
-const nodemailer = require('nodemailer');
-
-/*const transport =  nodemailer.createTransport({
-  host: "sandbox.smtp.mailtrap.io",
-  port: 2525,
-  auth: {
-    user: "2b2d542b2ef050",
-    pass: "002981d66b9032"
-  }
-});*/
-
-async function SendConfirmationEmail(email, token, res) {
-  try {
-    // Calcular la fecha de expiración del token
-    const expirationDate = new Date();
-    expirationDate.setHours(expirationDate.getHours() + 1);
-
-    let transporter;
-
-    if (email.endsWith('@gmail.com')) {
-      // Configuración para Gmail
-      transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'plantuapi@gmail.com',
-          pass: 'aurarhgkyclcuieu'
-        }
-      });
-    } else {
-      // Proveedor de correo electrónico no compatible
-      return false;
-    }
-
-    // Configurar el contenido del correo electrónico
-    const info = await transporter.sendMail({
-      from: 'My App noreply@example.com',
-      to: email,
-      subject: 'Validacion de registro',
-      html: `Por favor, haga clic en el siguiente enlace para confirmar su registro antes de ${expirationDate.toLocaleString()}: <a href="http://example.com/validateEmail/${token}">validar cuenta</a>`
-    });
-    return true;
-  } catch (error) {
-    return res.status(400).json({
-      status: 0,
-      data: [],
-      warnings: [],
-      info: 'Error al enviar el correo electrónico de confirmación',
-    });
-  }
-}
+const mail = require('../../../SendEmail');
 
 /* GET home page. */
 router.get('/signIn', function(req, res, next) {
@@ -170,7 +121,14 @@ router.post('/signIn',
           });
         }
 
-        SendConfirmationEmail(email, token, res).then((emailSent) => {
+        const expirationDate = new Date();
+        expirationDate.setHours(expirationDate.getHours() + 1);
+
+        const asunto = 'Validacion de registro';
+        const mensaje = `Por favor, haga clic en el siguiente enlace para confirmar su registro antes de ${expirationDate.toLocaleString()}: <a href="http://example.com/validateEmail/${token}">validar cuenta</a>`;
+        const merror = 'Error al enviar el correo electrónico de confirmación';
+
+        mail.SendEmail(email, asunto, mensaje, merror, res).then((emailSent) => {
           if (emailSent) {
             // Insertar el nuevo usuario en la base de datos
             pool.query('INSERT INTO porValidar (nombre, correo, contraseña,token) VALUES (?, ?, ?, ?)', [name, email, hash,token], (err, results) => {

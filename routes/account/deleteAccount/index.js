@@ -4,34 +4,7 @@ const bcryptjs = require('bcryptjs');
 const pool = require('../../../database');
 const { isEmail } = require('validator');
 const { body, validationResult } = require('express-validator');
-
-async function SendAccountDeletedEmail(email, res) {
-  try {
-    transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'plantuapi@gmail.com',
-        pass: 'aurarhgkyclcuieu'
-      }
-    });
-
-    // Configurar el contenido del correo electrónico
-    const info = await transporter.sendMail({
-      from: 'My App <plantuapi@gmail.com>',
-      to: email,
-      subject: 'Eliminacion de cuenta',
-      html: `Su cuenta ha sido eliminada exitosamente`
-    });
-    return true;
-  } catch (error) {
-    return res.status(400).json({
-      status: 0,
-      data: [],
-      warnings: [],
-      info: 'Error al enviar el correo electrónico de confirmación',
-    });
-  }
-}
+const mail = require('../../../SendEmail');
 
 // Borrar cuenta de usuario
 router.delete('/deleteAccount', [
@@ -121,7 +94,11 @@ router.delete('/deleteAccount', [
       pool.query('DELETE FROM redes_sociales WHERE id_usuario = ?', [user[0].id]),
     ]);
 
-    const notificationSent = await SendAccountDeletedEmail(email);
+    const asunto = 'Eliminacion de cuenta';
+    const mensaje = `Su cuenta ha sido eliminada exitosamente`;
+    const merror = 'Error al enviar el correo electrónico de confirmación';
+
+    const notificationSent = await  mail.SendEmail(email, asunto, mensaje, merror, res);
     if (!notificationSent) {
       return res.status(500).json({
         status: 0,
