@@ -3,57 +3,39 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const pool = require('../../../database');
 const { isEmail } = require('validator');
-const nodemailer = require('nodemailer');
+const mail = require('../../../SendEmail');
 
-router.get('/validateEmail/:token', async function(req, res, next) {
-  const { token } = req.params;
+router.post('/validateEmail/', async function(req, res, next) {
+  const { token } = req.body;
   try {
-    // Decodificar el token y extraer el correo electrónico
+    //Decodificar el token y extraer el correo electrónico
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    const email = decodedToken.email;
     
     // Obtener la fecha de creación del token
     const creationDate = new Date(decodedToken.iat * 1000);
     const expirationDate = new Date(decodedToken.exp * 1000);
 
-    // Verificar que la dirección de correo electrónico sea válida
-    if (!isEmail(email)) {
-      return res.status(400).json({
-        status: 0,
-        data: [],
-        warnings: ['La dirección de correo electrónico no es válida'],
-        info: 'Error interno, inténtalo de nuevo'
-      });
-    }
     // Buscar la dirección de correo electrónico en la tabla porValidar
-    pool.query('SELECT * FROM porValidar WHERE correo = ?', [email], (error, results) => {
-      if (error) {
+    pool.query('SELECT correo FROM porValidar WHERE token = ?', [token], (err, results) => {
+      if (err) {
         return res.status(500).json({
           status: 0,
           data: [],
           warnings: ['Error interno en la base de datos'],
           info: 'Error interno, inténtalo de nuevo'
         });
-      }
-
-      // Verificar que se encontró la dirección de correo electrónico en la tabla porValidar
-      if (results.length === 0) {
-        return res.status(404).json({
-          status: 0,
-          data: [],
-          warnings: ['La dirección de correo electrónico no está registrada para validación'],
-          info: 'Error interno, inténtalo de nuevo'
-        });
-      }
-
-      // Verificar que el token sea válido
-      if (token !== results[0].token) {
-        return res.status(400).json({
-          status: 0,
-          data: [],
-          warnings: ['El token no es válido'],
-          info: 'Error interno, inténtalo de nuevo'
-        });
+        // Manejar el error apropiadamente
+      } else {
+        if (results.length > 0) {
+          email = results[0].correo;
+        } else {
+          return res.status(404).json({
+            status: 0,
+            data: [],
+            warnings: ['No se encontró ninguna fila con el token especificado.'],
+            info: 'Error interno, inténtalo de nuevo'
+          });
+        }
       }
       
       // Verificar que el token no haya expirado
@@ -72,7 +54,11 @@ router.get('/validateEmail/:token', async function(req, res, next) {
             });
           }
           //Enviar el correo electrónico al usuario con el nuevo token
-          sendEmail(email, `Nuevo enlace de confirmación. Tu enlace de confirmación ha caducado. Por favor, haz clic en el siguiente enlace para confirmar tu registro antes de ${expirationDate.toLocaleString()}: <a href="http://localhost:5173/validateEmail/${newToken}">validar cuenta</a>`);
+          const asunto = 'Validacion de registro';
+          const mensaje = `Nuevo enlace de confirmación. Tu enlace de confirmación ha caducado. Por favor, haz clic en el siguiente enlace para confirmar tu registro antes de ${expirationDate.toLocaleString()}: <a href="http://localhost:5173/validateEmail/${newToken}">validar cuenta</a>`;
+          const merror = 'Error al enviar el correo electrónico de confirmación';
+  
+          mail.SendEmail(email, asunto, mensaje, merror, res);
           return res.status(400).json({
             status: 0,
             data: [],
@@ -83,7 +69,7 @@ router.get('/validateEmail/:token', async function(req, res, next) {
       }
 
       // Agregar el usuario a la tabla de usuarios
-      pool.query('INSERT INTO usuarios (nombre, correo, password) SELECT nombre, correo, password FROM porValidar WHERE correo = ?', [email], (err, results) => {
+      pool.query('INSERT INTO usuarios (nombre, correo, contraseña, rol) SELECT nombre, correo, contraseña, rol FROM porValidar WHERE correo = ?', [email], (err, results) => {
         if (err) {
           return res.status(500).json({
               status: 0,
