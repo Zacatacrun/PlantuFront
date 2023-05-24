@@ -109,7 +109,7 @@ router.post('/login', [
       }
       return res.status(200).json({
         status: 1,
-        data: [userObj],
+        data: userObj.nombre,
         warnings: [],
         info: 'Inicio de sesión exitoso',
         token: token
