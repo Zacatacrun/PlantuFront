@@ -1,113 +1,177 @@
 const express = require('express');
 const router = express.Router();
+const bcryptjs = require('bcryptjs');
 const pool = require('../../../database');
+//manejo tokens en base de datos
+const tokens = require('../../../tokens');
+const imagenes = require('../../../image');
+const getId  = require('../../../GetIDs');
+const jwt = require('jsonwebtoken');
 const { isEmail } = require('validator');
-
+const { get } = require('https');
+/*
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠠⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀⠠⠐⠀
+⡀⠄⠀⡀⠠⠀⠀⡀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⡀⠄⠀⠠⠀⠀⡀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀⠄⠀⠀
+⠀⠀⢀⠀⠀⠠⠀⠀⠀⡀⠂⠀⡀⠁⠀⠀⠁⠀⠀⠁⠀⡀⠁⢀⢀⣡⣴⣴⡶⣶⡷⣷⣶⣦⣤⡀⠀⠂⢀⠀⠁⠀⡀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁⠀⠀⠁
+⠐⠈⠀⠀⠈⠀⢀⠈⠀⠀⢀⠀⢀⠀⠈⠀⠈⠀⠁⠀⠁⢀⣔⡷⣟⢯⡳⣕⢯⣺⣪⡳⣕⢯⣻⣻⣷⣄⠀⠠⠀⠁⠀⠀⠈⠀⠈⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⡀
+⠀⠄⠀⠐⠀⠈⠀⠀⠠⠈⠀⠀⠀⡀⠈⠀⠈⠀⡀⠁⢠⡿⡯⣺⣪⣷⣽⣮⣷⣷⣾⣾⣾⣵⣧⣳⣕⢿⣮⣴⣶⣶⣵⣶⣬⣤⣡⣤⣢⣅⣤⣡⡈⡀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⢀⠠⠀
+⠀⠄⠂⠁⠀⠂⠀⠂⠀⡀⠄⠂⠁⠀⠀⠁⠀⠁⠀⠀⠌⠟⠟⠛⣙⣭⣯⡿⡟⣟⢽⢝⢽⢕⣝⣮⣾⣵⣽⣺⣼⡸⣜⢮⡺⡽⡻⡽⣝⣝⢯⡻⣻⢻⢿⣶⣌⡀⡈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠀⠀
+⠁⠀⠀⡀⠄⠐⠀⠐⠀⠀⠀⠀⢀⠀⠂⠈⠀⠐⠈⠀⠀⢄⣢⣿⡻⣝⢮⢮⡫⡮⣫⣳⡻⡫⣏⢗⢗⡵⣝⢮⡳⣻⡺⣕⣏⢯⢝⣞⣜⢮⡳⣝⢮⡳⡣⡳⡹⣿⣦⡠⠈⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠐⠀
+⠐⠀⠁⠀⠀⢀⠀⠂⠀⠈⠀⠈⠀⠀⢀⠐⠀⠐⢀⢠⣵⢿⢝⢮⡺⣪⢪⢸⢸⠸⡹⣪⢮⢫⢪⢪⢣⢏⢮⡳⡝⡮⣺⡪⣺⢪⡳⣕⢮⢳⢝⢎⢗⡝⡜⡜⡜⣔⡻⣷⡄⠂⢀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠈⠀⠠
+⢀⠠⠀⠐⠀⠀⡀⠄⠈⢀⣈⣀⣄⣈⣀⣠⣤⣵⢾⡻⡵⡝⡮⡳⡝⡮⣪⣗⢯⡫⡺⡪⡪⢪⠪⡊⡎⡭⡣⣓⢝⣞⣜⢞⢼⢕⣝⢎⡗⣝⡮⣳⡱⡩⣪⢪⡪⡲⡵⡝⣿⣆⢀⠀⠄⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠀⠁⠠⠀
+⠀⠀⢀⠀⠂⠁⠀⠀⠀⣺⣿⡻⡫⣟⣝⢯⡺⣪⣳⢽⡪⣏⢮⡫⡮⣳⡗⣗⢵⢝⢮⣪⢺⢜⡎⣎⢎⢎⢎⢮⣳⡑⡌⡝⣗⢧⡳⣳⡻⡩⡫⡮⡺⣜⢜⢵⡹⣚⢮⢳⢕⢿⢷⣤⣀⠄⠂⠁⠀⠁⢀⠁⠀⠁⠀⠁⠀⠁⢀⠠
+⠀⠐⠀⠀⡀⠄⠀⠂⠁⠐⢻⣾⣝⢮⡪⡧⣫⡾⡕⣗⢽⡸⡕⡧⣯⡳⡝⡮⣪⡳⣣⡳⣝⢵⡹⣪⢳⡹⡕⡧⣳⢘⢔⡌⡆⡳⡽⡣⡱⡨⢌⢯⡺⡪⣝⢵⡹⣪⢳⡹⣕⢝⢭⡻⡻⡿⣶⣶⢶⣵⣦⠄⠀⠁⠀⠁⠀⠁⠀⠀
+⠀⠂⠀⠄⠀⠀⡀⠄⠀⠄⠂⠉⠙⢛⢻⣿⡳⡣⡯⡺⡪⣮⣳⢟⡕⣗⢝⢮⡺⣜⢮⡺⡜⡮⡺⣪⢳⢕⣝⢮⡗⢃⠃⠃⡉⠊⠎⢊⠘⡚⠬⢜⡗⡽⡸⣕⢝⡮⡳⡕⡧⡫⣇⢗⣝⢮⢺⡸⣕⢧⣿⢃⠈⠀⠁⠀⠁⠀⠂⠁
+⠄⠐⠀⢀⠐⠀⠀⠀⢀⠀⢀⠠⠐⢠⣿⣳⢹⣪⣳⢽⢝⣞⢼⡱⣝⢼⡱⡳⡕⡧⡳⡵⣹⡪⡫⡮⡳⣣⢳⢕⡇⢐⠀⠡⠐⢈⠀⡂⠄⠐⡀⠂⡽⣪⢫⢎⢗⣝⢎⡗⣝⢮⡪⡳⡵⣭⣷⣽⡾⠟⠍⠀⠀⠀⠂⠁⠀⠁⢀⠀
+⠀⠠⠀⢀⠀⠀⠂⠁⠀⠀⠀⠀⢀⢺⣟⣝⢝⢮⢺⡪⡳⡕⡧⡳⡕⡧⡫⡮⡳⣝⡺⣪⡺⣜⢝⡽⡺⣜⢕⢗⡇⠄⠨⠐⢈⠠⠐⠀⠄⠡⠀⠂⢝⢮⡪⡳⣕⡗⡧⡫⡮⡺⣜⢵⢝⢞⣯⡄⠐⠀⠠⠐⠈⠀⠠⠀⠂⠈⠀⠀
+⠈⠀⢀⠀⢀⠐⠀⠠⠀⠁⠈⠀⡀⣿⡻⣺⢽⣪⣇⣯⣪⣳⣹⣜⢮⢳⡹⣪⡣⡳⣝⢼⢜⢮⢪⣻⡕⡵⡹⣕⢽⢀⠡⠈⠠⠠⢘⡀⠅⠂⢁⠁⢺⡱⣕⢝⡲⣏⢮⢳⢕⢽⡸⡪⣎⢗⢝⣿⠄⠠⠀⠀⡀⠠⠀⠀⠄⠠⠐⠀
+⠀⠁⠀⠀⡀⠀⠠⠀⠀⠂⠀⠁⣼⣟⢮⡪⣳⢹⡹⣍⢯⡏⡮⡪⣎⢧⢳⡱⡝⡼⣇⢗⢵⡹⣪⡺⢝⡎⣗⢕⢽⢄⠐⢈⠀⡂⡑⡆⢂⠈⠄⠈⣼⢪⡪⣣⡻⠸⣕⢇⢯⡪⡮⣳⢱⢝⢎⢿⡇⠄⠀⠂⠀⠀⠠⠐⠀⠀⢀⠠
+⠀⠀⠁⢀⠀⠠⠀⠐⠈⠀⢨⣼⡟⡮⣪⢺⢜⢵⡱⡕⣟⢎⢧⢫⢎⢮⡣⡳⡹⣺⢪⢳⡱⡣⣇⠏⡈⢷⡱⡝⣕⢧⠐⡀⠂⠄⠐⠑⡀⠌⡀⠅⣞⡕⣝⢼⠊⢀⢳⢝⢼⡸⡪⣳⡹⣜⠵⡽⡯⠀⠀⠄⠂⠁⠀⠀⠠⠐⠀⠀
+⠀⠁⠈⠀⠀⠠⠀⢀⢂⣾⣟⢗⡝⣜⢎⢧⡫⢮⡚⣮⡗⡝⡎⡧⡫⣎⢮⢫⣺⡳⡹⡜⡎⣇⡿⠵⠴⠬⠳⣝⢜⢎⣇⠄⡈⠄⢁⠁⠄⡐⠔⢊⣗⢕⡧⠓⠈⡂⠈⢯⡪⡎⡧⣳⡣⡳⡹⢼⡏⠀⠄⠀⡀⠀⠄⠁⠀⢀⠀⠐
+⠄⠂⠀⠂⠈⢀⣦⢷⡻⣣⢳⢕⢽⡸⣕⣗⢭⡣⡳⣹⡇⡯⡺⡸⡕⡵⡱⣳⢏⢮⢺⢸⢕⡗⠁⠄⠠⠐⠈⡈⠓⠧⣣⢧⠀⢂⠐⡀⠁⠄⠐⠰⡳⠩⢀⠂⡁⠄⠡⠐⢳⡹⡜⡎⣾⢱⢹⢽⡃⠐⠀⢀⠀⠀⠄⠀⠈⠀⠀⠀
+⢀⠀⠄⠐⠀⠐⢿⣧⣗⣵⣳⣽⣾⣾⣗⢕⡇⡗⣝⣺⡕⣇⢯⢺⢸⡪⣽⢳⢹⡸⡪⣣⠗⠠⠡⠨⠠⠡⢂⠄⠅⡐⢀⠂⠌⠠⠐⢀⠡⠈⠄⠅⠔⠨⡀⡂⡐⠨⠠⠡⠨⣪⡺⡪⡪⣗⢕⣿⠐⠀⠐⠀⠀⠐⠀⠀⠁⢀⠈⠀
+⠀⠀⡀⠀⠄⠂⠀⠉⠋⠋⠋⠡⢡⣿⡪⣣⢳⢹⢢⢻⡪⡎⡮⣪⢣⡷⡳⡱⡣⡇⣯⢾⢼⢮⢾⢮⢮⢶⢤⣂⢅⢀⠂⢐⠈⠠⢈⠠⠐⢈⠠⢨⢴⢵⠶⡶⣞⢾⢮⢦⣕⠰⣝⢎⢗⢝⣧⣿⠐⠈⠀⢀⠈⠀⠀⠁⡀⠄⠀⠐
+⠀⠂⠀⢀⠀⠠⠀⠁⢀⠐⠈⣠⣿⢳⢹⡸⡜⣕⢇⡏⣞⢜⢎⣮⢻⡸⡪⡺⣸⡾⠽⠵⠝⡮⡳⠱⡝⡮⡳⡱⡽⠦⢈⠠⠀⠅⠠⠐⢀⠂⠄⠹⡕⢝⣝⢮⢚⢮⠳⠳⢽⡊⡮⣻⣜⢕⢎⢿⢶⣄⠠⠀⢀⠀⠁⢀⠀⠀⠠⠐
+⠀⡀⠄⠀⠀⠄⠀⠂⢀⣠⣾⢞⢇⡏⡮⣪⢺⡸⡪⣪⣞⢵⢫⡪⡪⣪⢮⡞⣇⠣⢀⠠⠀⡗⠜⡌⢎⢯⡓⡅⡇⠐⠠⠐⢈⢀⠡⠈⠠⠐⢈⠀⣇⠣⢳⢛⠔⢜⡂⠀⡑⡁⡟⢦⡹⡻⢮⢧⣯⣻⠗⠀⢀⠀⠈⠀⠀⠠⠀⢀
+⠀⠀⠀⠀⠁⠀⠄⣶⢿⢝⢮⢪⡣⡳⣹⡸⡼⣜⡮⣗⡧⡯⡮⡾⡝⡽⡱⡕⡽⡌⢀⠀⡀⠸⢵⣘⡔⡅⡆⡵⠃⡁⢂⠡⠀⠄⢐⠈⠠⠈⠄⡐⢘⢮⡢⣅⡣⡳⠁⠀⠄⢂⢇⢂⢯⣎⠪⡪⣻⡄⠀⠈⠀⠀⠐⠀⠈⠀⢀⠀
+⠀⠁⠀⠁⠀⠂⠀⠻⣷⣽⢮⢧⢯⣞⣞⣮⣟⡮⡯⡗⠀⢝⡎⡮⡪⡎⣞⢜⢎⢽⢔⠀⡂⡐⠠⢈⠌⠨⢀⠂⡂⠂⡂⠄⠡⠈⠄⡈⠄⢃⠐⡀⢂⠐⡈⡐⡀⠂⠄⢂⠡⠈⢦⢡⣻⢻⣕⠌⣾⡃⠀⠈⠀⠐⠀⢀⠁⢀⠀⠠
+⠀⠈⠀⠈⠀⡀⠂⠁⠈⠛⠻⠿⠟⠟⢟⣿⣺⣺⣽⣽⡀⠂⢫⡎⡞⡜⣎⢷⣹⢸⢪⢳⢄⡂⠅⠂⠄⠅⢂⢐⠠⢁⠐⡈⠄⡁⢂⠐⠐⡀⢂⠐⡀⡂⡐⡀⢂⠡⢁⠂⠌⠨⢘⣮⢏⠰⣗⣵⠏⡀⢀⠈⠀⠐⠈⠀⠀⠀⢀⠠
+⠀⠈⠀⠈⠀⠀⢀⠀⠄⠐⠀⢀⠠⠀⠐⠻⡾⠟⠓⠙⢿⣦⡠⡙⣎⡇⡧⡣⡫⡓⡗⡗⠍⠅⠌⠨⠠⢁⢂⠐⡐⠠⢁⠐⡀⢂⢐⠨⡐⡔⢀⠂⡐⠠⠐⡀⢂⠂⡂⠌⠨⢐⡽⠍⠀⠀⠉⠁⠁⠀⠀⠀⠐⠀⠀⠄⠐⠈⠀⠀
+⠐⠈⠀⠈⠀⠈⠀⠀⠀⠠⠐⠀⠀⠀⠄⠂⠀⠀⠂⢀⠐⠨⣿⣫⢟⡷⣵⡹⡜⡎⡎⢵⡱⣝⢝⢟⢞⢦⡄⠂⠄⠡⠐⡀⠂⠄⠂⡁⢐⠀⢂⠐⠠⢈⠐⣰⢼⢯⣟⣮⢜⢿⢵⣄⣂⣁⠈⠀⠐⠀⠈⠀⠐⠈⠀⠀⡀⠀⠄⠀
+⠂⠀⠐⠀⠁⠀⠐⠀⠁⠀⢀⠀⠐⠀⢀⠀⠄⠂⠀⠄⢀⢼⣟⡮⣗⣯⣷⢷⢧⡳⡹⣘⠧⢧⣳⣹⣪⣣⢫⣆⠡⠈⠄⠐⡈⢀⠡⠀⢂⠈⠠⠀⢅⣐⡼⡽⣽⢽⣺⣽⣬⣢⣣⣭⠿⠃⠐⠀⠂⠀⠁⠀⠂⠀⡀⠁⠀⢀⠠⠀
+⢀⠈⠀⠀⠂⠁⠀⠐⠀⠈⠀⠀⠀⠂⠀⠀⢀⠀⠄⠀⠨⢻⢾⣽⢾⣿⢯⣳⣽⠷⣝⢜⡝⣵⣲⢴⣢⢊⡧⡪⡿⡝⡺⢶⣶⣖⡶⠼⠴⣾⡾⡽⡯⣗⡯⢫⢮⢮⣬⡟⠈⠉⠉⠀⠐⠀⠂⠀⠐⠀⠁⠀⠂⠀⡀⠠⠐⠀⠀⠀
+⠀⠀⠈⠀⠠⠀⠈⠀⠐⠀⠂⠁⠀⠂⠈⠀⠀⡀⠀⠐⠀⠠⠀⣄⣤⢾⢻⢫⡞⡡⢊⢧⢳⠽⡬⡭⡥⢥⢳⣹⣿⢴⢟⢲⣕⢟⡮⣛⢞⢿⡯⣟⠽⣗⡿⣺⡼⣽⣏⠀⡀⠂⠀⠁⢀⠐⠀⠈⠀⠀⠂⠀⠂⠀⡀⠀⠀⡀⠄⠈
+⡀⠂⠁⠀⠄⠐⠈⠀⠀⠂⠀⠠⠐⠀⠠⠈⠀⠀⠀⠂⡀⣦⢟⠝⢌⢢⢣⢳⢁⣊⢶⡇⢵⣱⡱⡣⡯⢳⣹⠯⡋⠼⡽⢩⣪⡳⡱⡽⣮⢾⢽⢽⣗⡦⣝⠳⢿⢽⢻⣆⠀⠀⠄⠁⠀⠀⠀⠂⠁⠀⠂⠀⠂⠀⡀⠀⠁⠀⠀⠀
+⠀⠀⠠⠀⠠⠀⢀⠐⠀⠐⠀⡀⢀⠠⠀⠀⠐⠈⠀⠠⣾⠫⠢⡑⢬⣷⣵⢇⠲⡱⣹⢽⣬⡪⡮⣞⡾⡝⠊⠐⠨⡪⡪⢺⣪⡮⡷⡫⣏⢗⣝⡜⣞⡿⡷⣯⡶⣥⣳⢿⣄⠂⠀⠠⠐⠈⠀⠀⠄⠂⠀⠂⠀⠂⠀⠀⠂⠀⠂⠁
+⡀⠂⠀⠄⠀⠄⠀⢀⠀⠂⠀⠀⠀⠀⠀⠈⠀⡀⠀⣽⡏⢜⠌⢜⣺⠂⣽⡂⡂⠪⡪⡛⡞⢟⢻⢩⠏⠠⠈⡀⠱⣐⡸⠘⣽⣻⢼⢵⠵⠗⠣⣧⣷⢯⣟⣗⡿⣽⣺⣻⡷⠀⠂⠀⢀⠀⠄⠂⠀⠀⠄⠐⠀⠐⠀⠁⠀⠐⠀⠀
+⠀⠀⠠⠀⠠⠀⠐⠀⠀⡀⠈⠀⠁⠀⠁⠀⠁⠀⠀⠺⠷⣧⣎⡆⣿⠄⠊⣷⣄⢂⠄⡡⣑⣡⡷⡛⠛⠷⠷⡶⣶⢦⡶⣼⣿⣦⢦⢶⠶⠗⡛⠁⡘⢿⣾⣾⣽⣺⣾⡟⠁⠂⠀⠈⠀⠀⠀⢀⠀⠂⠀⠠⠀⠂⠀⠄⠁⠀⠂⠁
+⠠⠈⠀⢀⠠⠀⠠⠐⠀⠀⠀⠂⠈⠀⠈⠀⠐⠈⠀⠀⠂⠀⠉⠙⠻⠁⢀⠀⠋⠛⠛⠛⠙⠁⠀⡀⠀⠄⠀⠄⠀⢀⠀⢀⠈⠀⠀⠠⠐⠀⠀⢀⠀⠀⠈⠉⠛⠋⠃⠄⠂⠀⠁⠀⠂⠀⠁⠀⢀⠀⠂⠀⠠⠀⠄⠀⡀⠂⠀⠠
+⠀⠀⡀⠀⠀⢀⠀⢀⠀⠈⠀⠐⠀⠈⠀⠈⠀⡀⠄⠁⠀⠐⠀⠂⠀⠄⠀⢀⠀⠂⠀⠁⠀⠄⠁⠀⢀⠠⠀⠠⠀⢀⠀⢀⠀⠀⠁⠀⡀⠀⠈⠀⠀⠈⠀⠠⠀⠄⠀⠄⠀⠐⠈⠀⠐⠈⠀⠈⠀⠀⢀⠈⠀⠀⡀⠀⡀⠀⠐⠀
+⠂⠁⠀⠀⠁⠀⢀⠀⢀⠈⠀⠐⠀⠈⠀⡀⠁⠀⠀⠀⠈⠀⠠⠐⠀⢀⠐⠀⠀⠠⠈⠀⠐⠀⠀⠄⠀⠀⢀⠠⠀⢀⠀⢀⠀⠈⢀⠠⠀⠀⠁⡀⠈⠀⠐⠀⢀⠠⠀⠠⠐⠀⠠⠐⠀⠀⠄⠂⠀⠈⠀⠀⠀⠁⠀⠀⡀⠀⠂⠀
+⠀⠀⠄⠂⠁⠀⡀⠀⡀⠀⠐⠀⡀⠁⠀⡀⠀⠄⠂⠁⠀⠁⠀⡀⠀⡀⠀⡀⠈⠀⠀⠐⠀⠐⠀⠠⠀⠁⠀⠀⠀⡀⠀⡀⠀⠈⠀⠀⠀⡀⠁⠀⢀⠈⠀⠠⠀⠀⠀⡀⠀⡀⢀⠀⠠⠀⢀⠠⠀⠁⠀⠈⠀⠐⠀⠁⠀⠀⠐⠈
+*/
+// POST /product/addProduct valida con token validate vivero
 router.post('/addProduct', async (req, res) => {
-    const { usuario, nombre, descripcion,categoria, precio, stock } = req.body;
-    //imprimir en consola los datos que se reciben
-    console.log(req.body);
-    
-    if (!usuario || !nombre || !descripcion|| !categoria  || !precio || !stock) {
+  const usuario_id=await getId.getUserId(pool,req.body.token);
+  if(!usuario_id){
+    return res.status(400).json({
+      status: 0,
+      data: [],
+      warnings: ['No se encontro el usuario'],
+      info: 'Error interno, intentalo de nuevo',
+      token: req.body.token
+    });
+  }
+  const vivero_id=await getId.getViveroId(pool,req.body.token);
+  if(!vivero_id){
+    return res.status(400).json({
+      status: 0,
+      data: [],
+      warnings: ['No se encontro el vivero'],
+      info: 'Error interno, intentalo de nuevo',
+      token: req.body.token
+    });
+  }
+  const token0 = await tokens.validateToken(pool, req.body.token);
+  //imprime los archivos
+  if (token0) {
+    const name=req.body.nombre;
+    const description=req.body.descripcion;
+    const price=req.body.precio;
+    const stock=req.body.stock;
+    const id_category=req.body.id_categoria;
+    if(!name || !description || !price || !stock || !id_category ){
       return res.status(400).json({
         status: 0,
         data: [],
-        warnings: [],
-        info: 'Todos los campos son obligatorios',
+        warnings: ['Faltan campos obligatorios'],
+        info: 'Error interno, intentalo de nuevo',
+        token: req.body.token
       });
     }
-  
-    try {
-      // Verificar si el usuario existe y es un vivero
-
-    const [userRows] = await pool.query('SELECT id FROM usuarios WHERE correo = ? AND rol = "vivero"', [usuario]);
-    
-    if (!userRows || !Object.keys(userRows).length) {
-    return res.status(403).json({
+    const producto= await pool.query('SELECT * FROM plantas WHERE nombre=? AND vivero_id=?',[name,vivero_id]);
+    if(producto.length>0){
+      return res.status(400).json({
         status: 0,
         data: [],
-        warnings: [],
-        info: 'Solo los viveros pueden agregar productos',
-    });
-    }
-    const usuarioid = Object.keys(userRows).find(key => key === "id");
-    const usuarioID = userRows[usuarioid];
-    const [vivero] = await pool.query('SELECT id FROM viveros WHERE vendedor_id = ?', [usuarioID]);
-    console.log(vivero);
-    console.log("vivero id: " + usuarioID);
-    if (!vivero) {
-    return res.status(500).json({
-        status: 0,
-        data: [],
-        warnings: [],
-        info: 'Error al obtener el vivero',
-    });
+        warnings: ['Ya existe un producto con ese nombre'],
+        info: 'Error interno, intentalo de nuevo',
+        token: req.body.token
+      });
     }
     
-    const viveroid = Object.keys(vivero).find(key => key === "id");
-    const viveroId = vivero[viveroid];
-    
-      // Verificar que el producto no exista con el mismo nombre y vivero id
-      const [productRows] = await pool.query('SELECT * FROM plantas WHERE nombre = ? AND vivero_id = ?', [nombre, viveroId]);
-        //imprimir en consola los datos que se reciben
-      if (productRows && Object.keys(productRows).length) {
+    if(!(!req.files))
+    {
+      const image = req.files.image;
+      const imagen = imagenes.uploadImage(image);
+      if (!imagen) {
         return res.status(400).json({
           status: 0,
           data: [],
-          warnings: [],
-          info: 'Ya existe un producto con ese nombre para este vivero',
+          warnings: ['Error al subir la imagen'],
+          info: 'Error interno, intentalo de nuevo',
+          token: req.body.token
         });
       }
-      // Verificar que la categoría exista
-      const [categoriaRows] = await pool.query('SELECT * FROM categorias WHERE nombre = ?', [categoria]);
-      //validar que la categoria exista
-        if (!categoriaRows || !Object.keys(categoriaRows).length) {
-        return res.status(404).json({
+      pool.query('INSERT INTO plantas (nombre, descripcion, precio, stock,imagen, vendedor_id, categoria_id, vivero_id) VALUES (?,?,?,?,?,?,?,?)', [name, description, price, stock,imagen,usuario_id, id_category,vivero_id], async (error, results) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({
             status: 0,
             data: [],
-            warnings: [],
-            info: 'La categoría no existe',
-        });
+            warnings: ['Error al registrar el producto'],
+            info: 'Error interno, intentalo de nuevo',
+            token: req.body.token
+          });
         }
-      // Obtener el id de la categoría
-      
-      const categoriaid = Object.keys(categoriaRows).find(key => key === "id");
-      const categoriaID = categoriaRows[categoriaid];
-
-      // Insertar el nuevo producto
-      const insertResult = await pool.query('INSERT INTO plantas (nombre, descripcion, precio, stock, vendedor_id, categoria_id, vivero_id) VALUES (?, ?, ?, ?, ?, ?, ?)', [nombre, descripcion, precio, stock, usuarioID, categoriaID, viveroId]);
-      // Obtener el producto insertado
-      const newProductRows = await pool.query('SELECT * FROM plantas WHERE id = ?', [insertResult.insertId]);
-      //imprimir en consola los datos que se reciben
-      
-
-      if (!newProductRows || !Object.keys(newProductRows).length) {
+        const id_product = results.insertId;
+        //validar que se haya insertado
+        if (id_product) {
+          return res.status(200).json({
+            status: 1,
+            data: [],
+            warnings: [],
+            info: 'Producto registrado correctamente',
+            token: req.body.token
+          });
+        
+        } 
+      });
+    } 
+    pool.query('INSERT INTO plantas (nombre, descripcion, precio, stock, vendedor_id, categoria_id, vivero_id) VALUES (?,?,?,?,?,?,?)', [name, description, price, stock,usuario_id, id_category,vivero_id], async (error, results) => {
+      if (error) {
+        console.error(error);
         return res.status(500).json({
           status: 0,
           data: [],
-          warnings: [],
-          info: 'Error al obtener el producto insertado',
+          warnings: ['Error al registrar el producto'],
+          info: 'Error interno, intentalo de nuevo',
+          token: req.body.token
         });
       }
-  
-      const newProductData = newProductRows[0];
-  
-      return res.status(201).json({
-        status: 1,
-        data: {
-          new: newProductData,
-        },
-        warnings: [],
-        info: 'Producto agregado exitosamente',
-      });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({
-        status: 0,
-        data: [],
-        warnings: [],
-        info: 'Error al agregar el producto',
-      });
-    }
-  });
+      const id_product = results.insertId;
+      //validar que se haya insertado
+      if (id_product) {
+        return res.status(200).json({
+          status: 1,
+          data: [],
+          warnings: [],
+          info: 'Producto registrado correctamente',
+          token: req.body.token
+        });
+      
+      } 
+    });
+  } else {
+    return res.status(401).json({
+      status: 0,
+      data: [],
+      warnings: [],
+      info: 'Error de logout, acceso denegado',
+      token: req.body.token
+    });
+  }
+});
+  //realiza la consulta
 module.exports = router;
