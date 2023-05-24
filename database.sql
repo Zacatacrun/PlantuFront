@@ -1,4 +1,3 @@
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
 START TRANSACTION;
@@ -6,7 +5,26 @@ SET time_zone = "+00:00";
 
 CREATE DATABASE PLANTU;
 USE PLANTU;
--- tokens tiene token y id de usuario
+
+
+-- Creamos la tabla de usuarios
+CREATE TABLE usuarios (
+id INT PRIMARY KEY AUTO_INCREMENT,
+nombre VARCHAR(50),
+correo VARCHAR(50),
+contraseña VARCHAR(100),
+rol VARCHAR(50)
+);
+
+CREATE TABLE porValidar (
+id INT PRIMARY KEY AUTO_INCREMENT,
+nombre VARCHAR(50),
+correo VARCHAR(50),
+contraseña VARCHAR(100),
+rol VARCHAR(50),
+token VARCHAR(500)
+);
+
 CREATE TABLE tokens (
 id INT PRIMARY KEY AUTO_INCREMENT,
 token VARCHAR(300),
@@ -14,26 +32,6 @@ usuario_id INT,
 fecha_creacion TIMESTAMP,
 fecha_expiracion TIMESTAMP,
 FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
-);
---crea un alter table para modificar token y volverlo varchar de 300
-ALTER TABLE tokens MODIFY token VARCHAR(300);
-
--- Creamos la tabla de usuarios
-CREATE TABLE usuarios (
-id INT PRIMARY KEY AUTO_INCREMENT,
-nombre VARCHAR(50),
-correo VARCHAR(50),
-contraseña VARCHAR(100)
-);
---modifica la tabla usuario, agregale rol, un varchar de 10
-ALTER TABLE usuarios ADD rol VARCHAR(10);
-
-CREATE TABLE porValidar (
-id INT PRIMARY KEY AUTO_INCREMENT,
-nombre VARCHAR(50),
-correo VARCHAR(50),
-contraseña VARCHAR(100),
-token VARCHAR(100)
 );
 
 -- Creamos la tabla bulletin
@@ -71,7 +69,6 @@ FOREIGN KEY (vendedor_id) REFERENCES usuarios(id),
 FOREIGN KEY (categoria_id) REFERENCES categorias(id),
 FOREIGN KEY (vivero_id) REFERENCES viveros(id)
 );
-
 
 CREATE TABLE transacciones (
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -120,9 +117,6 @@ numero_seguimiento VARCHAR(50),
 FOREIGN KEY (transaccion_id) REFERENCES transacciones(id)
 );
 
-
-
-
 CREATE TABLE soporte (
 id INT PRIMARY KEY AUTO_INCREMENT,
 usuario_id INT,
@@ -131,8 +125,6 @@ estado VARCHAR(20),
 descripcion TEXT,
 FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
-
-
 
 -- Creamos la tabla de mensajes
 CREATE TABLE mensajes (
@@ -165,7 +157,6 @@ cantidad INT,
 FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
 FOREIGN KEY (planta_id) REFERENCES plantas(id)
 );
-
 
 -- Creamos la tabla de comentarios y valoraciones
 CREATE TABLE comentarios (
