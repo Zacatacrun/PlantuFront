@@ -32,6 +32,12 @@ router.post('/signIn',
     .isString().withMessage('La contraseña debe ser una cadena de caracteres')
     .trim()
     .isLength({ max: 100 }).withMessage('La contraseña no puede tener más de 100 caracteres')
+    .escape(),
+    body('rol')
+    .notEmpty().withMessage('El campo rol es obligatorio')
+    .isString().withMessage('El rol debe ser una cadena de caracteres')
+    .trim()
+    .isLength({ max: 50 }).withMessage('El rol no puede tener más de 50 caracteres')
     .escape()
   ], function(req, res, next) {
 
@@ -46,9 +52,9 @@ router.post('/signIn',
       });
     }
 
-  const { name, email, password} = req.body;
+  const { name, email, password, rol} = req.body;
   // Verificar que los campos no estén vacíos
-  if (!name || !email || !password) {
+  if (!name || !email || !password || !rol) {
     return res.status(400).json({
         status: 0,
         data: [],
@@ -131,7 +137,7 @@ router.post('/signIn',
         mail.SendEmail(email, asunto, mensaje, merror, res).then((emailSent) => {
           if (emailSent) {
             // Insertar el nuevo usuario en la base de datos
-            pool.query('INSERT INTO porValidar (nombre, correo, contraseña,token) VALUES (?, ?, ?, ?)', [name, email, hash,token], (err, results) => {
+            pool.query('INSERT INTO porValidar (nombre, correo, contraseña,rol,token) VALUES (?, ?, ?, ?, ?)', [name, email, hash,rol,token], (err, results) => {
               if (err) {
                 return res.status(500).json({
                   status: 0,
