@@ -1,3 +1,5 @@
+const { json } = require("express");
+
 async function getViveroId(pool, token) {
     try {
         // Buscamos el token en la base de datos
@@ -34,7 +36,35 @@ async function getUserId(pool, token) {
         return false;
     }
 }
+//create a function that recibe a token and return the user data
+async function getUserData(pool, token) {
+    try {
+        // Buscamos el token en la base de datos
+        const rows = await pool.query('SELECT * FROM tokens WHERE token = ?', [token]);
+        if(rows.length===0){
+            console.log('El token no existe en la base de datos');
+            return false;
+        }
+        const user= await pool.query('SELECT * FROM usuarios WHERE id = ?',[rows[0].usuario_id]);
+        if(user.length===0){
+            console.log('El usuario no existe en la base de datos');
+            return false;
+        }
+        const userData={
+            id: user[0].id,
+            nombre: user[0].nombre,
+            correo: user[0].correo,
+            rol: user[0].rol
+        }
+        return userData ;
+    }
+    catch (error) {
+        console.log(error);
+        return false;
+    }  
+}
 module.exports = {
     getViveroId,
-    getUserId
+    getUserId,
+    getUserData
 };
