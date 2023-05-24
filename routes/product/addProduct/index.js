@@ -4,7 +4,7 @@ const bcryptjs = require('bcryptjs');
 const pool = require('../../../database');
 //manejo tokens en base de datos
 const tokens = require('../../../tokens');
-const imagenes = require('../../../image');
+const imagenes = require('../../../Image');
 const getId  = require('../../../GetIDs');
 const jwt = require('jsonwebtoken');
 const { isEmail } = require('validator');
