@@ -65,6 +65,14 @@ async function saveToken(pool,user, token) {
         console.log('El usuario no existe en la base de datos');
         return false;
       }
+      //verifica si el usuario tiene un token activo
+      const rows2 = await pool.query('SELECT * FROM tokens WHERE usuario_id = ?', [userObj[0].id]);
+      if (rows2.length !== 0) {
+        //throw new Error('El usuario ya tiene un token activo');
+        //imprime el error en la consola
+        console.log('El usuario ya tiene un token activo');
+        return true;
+      }
       //get the id of the user from the json object
       const userId = userObj[0].id;
       const result = await pool.query('INSERT INTO tokens (token, usuario_id) VALUES (?, ?)', [token, userId]);
@@ -83,7 +91,6 @@ async function validateToken(pool,token) {
         const rows = await pool.query('SELECT * FROM tokens WHERE token = ?', [token]);
         //convert the rows to an json object
         const tokenObj = JSON.parse(JSON.stringify(rows));
-        console.log(rows.length === 0);
         
         // Validamos que el token exista
         if (rows.length === 0) {
@@ -113,11 +120,9 @@ async function validateToken(pool,token) {
         
         //get the difference between the date of today and the date of the token
         const diffTime = Math.abs(today - tokenDateObj);
-        console.log(diffTime);
         
         //get the difference in days
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        console.log(diffDays);
         //if the difference in days is greater than 1 delete the token from the database
         if (diffDays > 1) {
             //delete the token from the database

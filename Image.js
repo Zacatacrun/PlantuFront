@@ -61,6 +61,27 @@ async function uploadImage(file) {
         return null;
     }
 }
+//obtener id de imagen de cloudinary de un enlace
+function getImageId(imageUrl) {
+    const imageId = imageUrl.split('/').pop().split('.')[0];
+    return imageId;
+}
+
+//borrar imagen de cloudinary
+async function deleteImage(imageUrl) {
+    const public_id = getImageId(imageUrl);
+    if (!public_id) return null;
+    try {
+        const result = await cloudinary.uploader.destroy(public_id);
+        return result;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+}
+
 module.exports = {
-    uploadImage
+    uploadImage,
+    getImageId,
+    deleteImage
 };

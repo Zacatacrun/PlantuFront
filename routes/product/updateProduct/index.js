@@ -1,76 +1,121 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../../../database');
-const { isEmail } = require('validator');
 
-router.put('/products/:id', async (req, res) => {
-const productId = req.params.id;
-const userId = req.body.usuario_id;
-const userRole = req.body.rol;
-const updatedProductData = req.body.updatedProduct;
-
-try {
-    // Verificar si el usuario es administrador
-    const [userRows] = await pool.query('SELECT * FROM usuarios WHERE id = ? AND rol = "vivero"', [userId]);
-
-    if (!userRows || !Object.keys(userRows).length) {
-    return res.status(401).json({
+const image = require('../../../Image');
+const getIds= require('../../../GetIDs');
+const tokens = require('../../../tokens');
+router.put('/updateProduct', async (req, res) => {
+    const productId = req.body.id;
+    const token = req.body.token;
+    const precio = req.body.precio;
+    const stock = req.body.stock;
+    const nombre = req.body.nombre;
+    const descripcion = req.body.descripcion;
+    const imagen = req.imagen;
+    if (!req.body.id || !req.body.token) {
+        return res.status(400).json({
         status: 0,
         data: [],
         warnings: [],
-        info: 'Solo el administrador puede editar productos',
-    });
+        info: 'Faltan datos obligatorios',
+        });
     }
-
-    // Obtener el producto a editar
-    const [oldProductRows] = await pool.query('SELECT * FROM plantas WHERE id = ?', [productId]);
-
-    if (!oldProductRows || !Object.keys(oldProductRows).length) {
-    return res.status(404).json({
-        status: 0,
-        data: [],
-        warnings: [],
-        info: 'El producto no existe',
-    });
+    const tokenUserId= await getIds.getUserId(pool, req.body.token);
+    const productoActual = await pool.query('SELECT * FROM plantas WHERE id = ?', [productId]);
+    if (!productoActual || !Object.keys(productoActual).length) {
+        return res.status(404).json({
+            status: 0,
+            data: [],
+            warnings: [],
+            info: 'El producto no existe o no se encuentra disponible',
+        });
     }
-
-    const oldProductData = oldProductRows[0];
-
-    // Actualizar el producto
-    await pool.query('UPDATE plantas SET ? WHERE id = ?', [updatedProductData, productId]);
-
-    // Obtener el producto actualizado
-    const [newProductRows] = await pool.query('SELECT * FROM plantas WHERE id = ?', [productId]);
-
-    if (!newProductRows || !Object.keys(newProductRows).length) {
-    return res.status(500).json({
-        status: 0,
-        data: [],
-        warnings: [],
-        info: 'Error al obtener el producto actualizado',
-    });
+    const usuarioVivero= await getIds.getViveroData(pool, req.body.token);
+    if (!usuarioVivero || !Object.keys(usuarioVivero).length) {
+        return res.status(404).json({
+            status: 0,
+            data: [],
+            warnings: [],
+            info: 'fallo al obtener el vivero',
+        });
     }
+    if((tokens.validateToken(pool, req.body.token) == false)||(tokenUserId!=usuarioVivero.vendedor_id)){
+        return res.status(400).json({
+            status: 0,
+            data: [],
+            warnings: [],
+            info: 'No tienes permiso para modificar este producto',
+        });
+    }
+    try {
+        let query = 'UPDATE plantas SET';
+        if (imagen) {
+        const imagenN = image.uploadImage(imagen);
+        if (!imagenN) {
+            return res.status(400).json({
+            status: 0,
+            data: [],
+            warnings: ['Error al subir la imagen'],
+            info: 'Error interno, intentalo de nuevo',
+            });
+        }
+        const imagenActual = await pool.query('SELECT imagen FROM plantas WHERE id = ?', [productId]);
+        if (imagenActual) {
+            image.deleteImage(imagenActual[0].imagen);
+        }
+        query += ` imagen = '${imagenN}',`;
+        }
 
-    const newProductData = newProductRows[0];
+        if (precio) {
+        query += ` precio = ${precio},`;
+        }
 
-    return res.status(200).json({
-    status: 1,
-    data: {
-        old: oldProductData,
-        new: newProductData,
-    },
-    warnings: [],
-    info: 'Producto actualizado exitosamente',
-    });
-} catch (err) {
-    console.error(err);
-    return res.status(500).json({
-    status: 0,
-    data: [],
-    warnings: [],
-    info: 'Error al actualizar el producto',
-    });
-}
+        if (stock) {
+        query += ` stock = ${stock},`;
+        }
+
+        if (nombre) {
+        query += ` nombre = '${nombre}',`;
+        }
+
+        if (descripcion) {
+        query += ` descripcion = '${descripcion}',`;
+        }
+
+        // Eliminar la coma final en caso de que haya alguna condición
+        if (query.endsWith(',')) {
+        query = query.slice(0, -1); // Eliminar la última coma
+        }
+        await pool.query(query);
+        const productoActualizado = await pool.query('SELECT * FROM plantas WHERE id = ?', [productId]);
+        if (!productoActualizado || !Object.keys(productoActualizado).length) {
+            return res.status(404).json({
+                status: 0,
+                data: [],
+                warnings: [],
+                info: 'Error interno, el producto no se pudo actualizar',
+            });
+        }
+        return res.status(200).json({
+            status: 1,
+            data: {
+                "antiguo":productoActual,
+                "actual":productoActualizado
+            },
+            warnings: [],
+            info: 'Producto actualizado correctamente',
+        });
+        // Verificar si el usuario es administrador
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: 0,
+            data: [],
+            warnings: ['Error al actualizar el producto'],
+            info: 'Error interno, intentalo de nuevo',
+        });
+    }
 });
 
   module.exports = router;

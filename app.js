@@ -31,6 +31,8 @@ let getProductReviewsRouter = require('./routes/product/getProductReviews/');
 let getSimilarProductsRouter = require('./routes/product/getSimilarProducts/');
 let getAllProductsRouter = require('./routes/products/getAllProducts/');
 let getViverosAndProductsRouter = require('./routes/products/getViverosAndProducts/');
+const getProductsRouter = require('./routes/products/getProducts');
+const deleteProductRouter = require('./routes/product/deleteProduct');
 let app = express();
 
 // view engine setup
@@ -68,6 +70,8 @@ app.use('/api/product', updatedProductRouter);
 app.use('/api/product', addProductRouter);
 app.use('/api/products', getAllProductsRouter);
 app.use('/api/products', getViverosAndProductsRouter);
+app.use('/api/products', getProductsRouter);
+app.use('/api/product', deleteProductRouter);
 
 
 
