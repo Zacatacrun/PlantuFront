@@ -35,7 +35,6 @@ router.post('/join', async (req, res) => {
         token: req.body.token
       });
     }else if(user.rol!=="user"){
-      console.log(user);
       return res.status(400).json({
         status: 0,
         data: [],

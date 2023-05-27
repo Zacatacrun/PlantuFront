@@ -194,7 +194,7 @@ async function validateAdminToken(pool, token) {
 
       // Verificar si el usuario es un vivero (admin)
       const user_id = rows[0].usuario_id;
-      const userRows = await pool.query('SELECT * FROM usuarios WHERE id = (SELECT id FROM usuarios WHERE rol = ?)', 'admin');
+      const userRows = await pool.query('SELECT * FROM usuarios WHERE id = ? AND rol = ?', [user_id, 'admin']);
       if (userRows.length === 0) {
           console.log('El usuario no es un admin');
           return false;
