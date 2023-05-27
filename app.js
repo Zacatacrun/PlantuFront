@@ -36,6 +36,7 @@ const deleteProductRouter = require('./routes/product/deleteProduct');
 const checkViveroRouter = require('./routes/join/checkVivero');
 const updateViveroRouter = require('./routes/join/updateVivero');
 const deleteViveroRouter = require('./routes/join/deleteVivero');
+const getViveroRouter = require('./routes/join/getVivero');
 let app = express();
 
 // view engine setup
@@ -53,6 +54,7 @@ app.use(cors())
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
 app.use('/api/join', joinRouter);
+app.use('/api/join', getViveroRouter);
 app.use('/api/bulletin', subscribeRouter);
 app.use('/api/bulletin',unsubscribeRouter);
 app.use('/api/account', singInRouter);
@@ -78,6 +80,7 @@ app.use('/api/product', deleteProductRouter);
 app.use('/api/join', checkViveroRouter);
 app.use('/api/join', updateViveroRouter);
 app.use('/api/join', deleteViveroRouter);
+
 
 
 
