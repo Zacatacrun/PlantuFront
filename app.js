@@ -35,6 +35,7 @@ const getProductsRouter = require('./routes/products/getProducts');
 const deleteProductRouter = require('./routes/product/deleteProduct');
 const checkViveroRouter = require('./routes/join/checkVivero');
 const updateViveroRouter = require('./routes/join/updateVivero');
+const deleteViveroRouter = require('./routes/join/deleteVivero');
 let app = express();
 
 // view engine setup
@@ -76,6 +77,7 @@ app.use('/api/products', getProductsRouter);
 app.use('/api/product', deleteProductRouter);
 app.use('/api/join', checkViveroRouter);
 app.use('/api/join', updateViveroRouter);
+app.use('/api/join', deleteViveroRouter);
 
 
 
