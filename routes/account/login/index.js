@@ -23,8 +23,7 @@ router.post('/login', [
     .trim()
     .isLength({ max: 100 }).withMessage('La contraseña no puede tener más de 50 caracteres')
     .escape()
-  ], function(req, res, next) {
-
+  ], async(req, res)=> {
     // Verificar si existen errores de validación
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -51,9 +50,18 @@ router.post('/login', [
   // Validar si el usuario es un correo o un nombre de usuario
   const isEmailUser = isEmail(user);
   const queryUser = isEmailUser ? 'correo' : 'nombre';
-
+  let userObj = await pool.query(`SELECT * FROM usuarios WHERE ${queryUser} = ?`, [user]);
+  if(userObj.length === 0){
+    return res.status(404).json({
+      status: 0,
+      data: [],
+      warnings: ['El usuario no está registrado'],
+      info: 'Error interno, intentalo de nuevo'
+    });
+  }
+  let token = await pool.query(`SELECT * FROM tokens WHERE usuario_id = ?`, [userObj[0].id]);
   // Validar que el usuario esté registrado
-  pool.query(`SELECT * FROM usuarios WHERE ${queryUser} = ?`, [user], (err, results) => {
+  pool.query(`SELECT * FROM usuarios WHERE ${queryUser} = ?`, [user],async (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({
@@ -74,7 +82,7 @@ router.post('/login', [
     }
 
     // Verificar la contraseña
-    const userObj = results[0];
+    userObj = results[0];
     bcryptjs.compare(password, userObj.contraseña, function(err, result) {
       if (err) {
         console.error(err);
@@ -96,16 +104,21 @@ router.post('/login', [
       }
 
       // Generar el token de autenticación
-      const token = jwt.sign({ user: userObj[queryUser] }, 'secretkey', { expiresIn: '1d' });
-      // res error if token is not saved
-      if (!tokens.saveToken(pool, userObj[queryUser], token)) {
-        return res.status(500).json({
-          status: 0,
-          data: [],
-          warnings: ['Error interno al guardar el token'],
-          info: 'Error interno, intentalo de nuevo',
-          token:''
-        });
+      
+      if(token.length == 0 ||!tokens.validateToken(pool,token[0].token)){
+        token = jwt.sign({ user: userObj[queryUser] }, 'secretkey', { expiresIn: '1d' });
+        // res error if token is not saved
+        if (!tokens.saveToken(pool, userObj[queryUser], token)) {
+          return res.status(500).json({
+            status: 0,
+            data: [],
+            warnings: ['Error interno al guardar el token'],
+            info: 'Error interno, intentalo de nuevo',
+            token:''
+          });
+        }
+      }else{
+        token = token[0].token;
       }
       return res.status(200).json({
         status: 1,
