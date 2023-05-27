@@ -54,6 +54,14 @@ vendedor_id INT,
 aceptado boolean,
 FOREIGN KEY (vendedor_id) REFERENCES usuarios(id)
 );
+--modificar tabla viveros para agregar el campo correo
+alter table viveros add column correo varchar(50);
+--crea una tabla viverosPorValidar que tenga el id del vivero como foreing key
+CREATE TABLE viverosPorValidar (
+id INT PRIMARY KEY AUTO_INCREMENT,
+id_vivero INT,
+FOREIGN KEY (id_vivero) REFERENCES viveros(id)
+);
 
 CREATE TABLE plantas (
 id INT PRIMARY KEY AUTO_INCREMENT,
@@ -69,6 +77,7 @@ FOREIGN KEY (vendedor_id) REFERENCES usuarios(id),
 FOREIGN KEY (categoria_id) REFERENCES categorias(id),
 FOREIGN KEY (vivero_id) REFERENCES viveros(id)
 );
+--modificar tabla plantas para agregar el campo tipo id, 
 
 CREATE TABLE transacciones (
 id INT PRIMARY KEY AUTO_INCREMENT,
