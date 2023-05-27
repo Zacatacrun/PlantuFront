@@ -75,7 +75,9 @@ async function saveToken(pool,user, token) {
       }
       //get the id of the user from the json object
       const userId = userObj[0].id;
-      const result = await pool.query('INSERT INTO tokens (token, usuario_id) VALUES (?, ?)', [token, userId]);
+      const fecha = new Date();
+      const fecha2 = fecha.getFullYear() + '-' + (fecha.getMonth() + 1) + '-' + fecha.getDate() + ' ' + fecha.getHours() + ':' + fecha.getMinutes() + ':' + fecha.getSeconds();
+      const result = await pool.query('INSERT INTO tokens (token, usuario_id,fecha_creacion) VALUES (?, ?, ?)', [token, userId, fecha2]);
       const tokenObj = JSON.parse(JSON.stringify(result));
       // Retornamos verdadero si se insertó el token
       return true;
@@ -87,6 +89,7 @@ async function saveToken(pool,user, token) {
 //metodo que recibe un token y valida si existe en la base de datos y si es valido, retorna true si es valido o false si no lo es
 async function validateToken(pool,token) {
     try {
+       
         // Buscamos el token en la base de datos
         const rows = await pool.query('SELECT * FROM tokens WHERE token = ?', [token]);
         //convert the rows to an json object
