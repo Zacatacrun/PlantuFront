@@ -29,7 +29,12 @@ const { isEmail } = require('validator');
 
 
 router.put('/updateVivero', async (req, res) => {
-    const{viveroID,viveroName,viveroEmail,descripcion,imagen,token} = req.body;
+    const viveroID = req.body.viveroID;
+    const imagen = req.body.image;
+    const viveroName = req.body.viveroName;
+    const viveroEmail = req.body.viveroEmail;
+    const descripcion = req.body.descripcion;
+    const token = req.body.token;
     const user = await getIds.getUserData(pool,token);
     if(user.length==0){
         return res.status(400).json({
@@ -68,20 +73,6 @@ router.put('/updateVivero', async (req, res) => {
             params.push(descripcion);
         }
         if(imagen){
-            const actual = await pool.query('SELECT imagen FROM viveros WHERE id=?',[viveroID]);
-            if(actual.length>0){
-                const barrado=image.deleteImage(actual[0].imagen);
-                if(!barrado){
-                    return res.status(400).json({
-                        status: 0,
-                        data: [],
-                        warnings: ['Error borrando imagen'],
-                        info: 'Error interno, intentalo de nuevo',
-                        token: req.body.token
-                        });
-                }
-            }
-            const img = await image.uploadImage(imagen);
             query += 'imagen=?,';
             params.push(imagen);
         }

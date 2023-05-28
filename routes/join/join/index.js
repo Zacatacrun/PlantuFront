@@ -11,7 +11,7 @@ router.post('/join', async (req, res) => {
   const nombre = req.body.viveroName;
   const correo = req.body.viveroEmail;
   const descripcion = req.body.descripcion;
-  const imagen = req.body.imagen;
+  const imagen = req.body.image;
   const token = req.body.token;
   if(tokens.validateToken(pool,token)){
     //valida que no falten campos obligatorios
