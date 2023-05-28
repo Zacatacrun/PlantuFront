@@ -3,7 +3,8 @@ const router = express.Router();
 const pool = require('../../../database');
 const tokens = require('../../../tokens');
 const { isEmail } = require('validator');
-const sendEmail = require('../../../sendEmail');
+const sendEmail = require('../../../SendEmail');
+const getIds = require('../../../GetIDs');
 
 router.post('/subscribe', async (req, res) => {
   const token = await tokens.validateToken(pool, req.body.token);
@@ -17,8 +18,8 @@ router.post('/subscribe', async (req, res) => {
     });
   }
 
-  const email = req.body.email;
-
+  let email= await getIds.getUserData(pool, req.body.token);
+  email = email.correo;
   // Validar que el correo sea válido
   if (!isEmail(email)) {
     return res.status(400).json({

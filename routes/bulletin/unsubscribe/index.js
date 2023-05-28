@@ -3,14 +3,16 @@ const router = express.Router();
 const pool = require('../../../database');
 const validator = require('validator');
 const tokens = require('../../../tokens');
-const sendEmail = require('../../../sendEmail');
+const sendEmail = require('../../../SendEmail');
+const getIds = require('../../../GetIDs');
 // Endpoint para desuscribirse del boletín
 router.delete('/unsubscribe', async(req, res) => {
   const token= await tokens.validateToken(pool,req.body.token);
   if (token)
   {
     // Obtener el correo electrónico del cuerpo de la solicitud
-    const email = req.body.email;
+    let email= await getIds.getUserData(pool, req.body.token);
+    email = email.correo;
 
     // Validar el correo electrónico
     if (!validator.isEmail(email)) {
