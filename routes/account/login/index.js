@@ -10,33 +10,33 @@ const validator = require('validator');
 const { body, validationResult } = require('express-validator');
 
 router.post('/login', [
-    // Validación de campos utilizando express-validator
-    body('user')
+  // Validación de campos utilizando express-validator
+  body('user')
     .notEmpty().withMessage('El campo usuario es obligatorio')
     .isString().withMessage('El usuario debe ser una cadena de caracteres')
     .trim()
     .isLength({ max: 50 }).withMessage('El usuario no puede tener más de 50 caracteres')
     .escape(),
-    body('password')
+  body('password')
     .notEmpty().withMessage('El campo contraseña es obligatorio')
     .isString().withMessage('La contraseña debe ser una cadena de caracteres')
     .trim()
     .isLength({ max: 100 }).withMessage('La contraseña no puede tener más de 50 caracteres')
     .escape()
-  ], async(req, res)=> {
-    // Verificar si existen errores de validación
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: 0,
-        data: [],
-        warnings: errors.array().map(e => e.msg),
-        info: 'Error interno, intentalo de nuevo'
-      });
-    }
+], async (req, res) => {
+  // Verificar si existen errores de validación
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      status: 0,
+      data: [],
+      warnings: errors.array().map(e => e.msg),
+      info: 'Error interno, intentalo de nuevo'
+    });
+  }
 
   const { user, password } = req.body;
-  
+
   // Validar que los campos no estén vacíos
   if (!user || !password) {
     return res.status(400).json({
@@ -51,7 +51,7 @@ router.post('/login', [
   const isEmailUser = isEmail(user);
   const queryUser = isEmailUser ? 'correo' : 'nombre';
   let userObj = await pool.query(`SELECT * FROM usuarios WHERE ${queryUser} = ?`, [user]);
-  if(userObj.length === 0){
+  if (userObj.length === 0) {
     return res.status(404).json({
       status: 0,
       data: [],
@@ -61,7 +61,7 @@ router.post('/login', [
   }
   let token = await pool.query(`SELECT * FROM tokens WHERE usuario_id = ?`, [userObj[0].id]);
   // Validar que el usuario esté registrado
-  pool.query(`SELECT * FROM usuarios WHERE ${queryUser} = ?`, [user],async (err, results) => {
+  pool.query(`SELECT * FROM usuarios WHERE ${queryUser} = ?`, [user], async (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({
@@ -104,8 +104,8 @@ router.post('/login', [
       }
 
       // Generar el token de autenticación
-      
-      if(token.length == 0 ||!tokens.validateToken(pool,token[0].token)){
+
+      if (token.length == 0 || !tokens.validateToken(pool, token[0].token)) {
         token = jwt.sign({ user: userObj[queryUser] }, 'secretkey', { expiresIn: '1d' });
         // res error if token is not saved
         if (!tokens.saveToken(pool, userObj[queryUser], token)) {
@@ -114,22 +114,27 @@ router.post('/login', [
             data: [],
             warnings: ['Error interno al guardar el token'],
             info: 'Error interno, intentalo de nuevo',
-            token:''
+            token: ''
           });
         }
-      }else{
+      } else {
         token = token[0].token;
       }
       return res.status(200).json({
         status: 1,
-        data: userObj.nombre,
+        data: {
+          id: userObj.id,
+          nombre: userObj.nombre,
+          correo: userObj.correo,
+          rol: userObj.rol
+        },
         warnings: [],
         info: 'Inicio de sesión exitoso',
         token: token
       });
     });
   });
-  
+
 });
 
 module.exports = router;
