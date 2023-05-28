@@ -109,3 +109,6 @@ dist
 # lock files for yarn and npm 
 *.lock
 package-lock.json
+
+# cloudinary config
+config.json
