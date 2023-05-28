@@ -61,19 +61,10 @@ router.post('/addProduct', async (req, res) => {
       });
     }
     
-    if(!(!req.files))
+    if(req.body.image.length>0)
     {
       const image = req.files.image;
-      const imagen = imagenes.uploadImage(image);
-      if (!imagen) {
-        return res.status(400).json({
-          status: 0,
-          data: [],
-          warnings: ['Error al subir la imagen'],
-          info: 'Error interno, intentalo de nuevo',
-          token: req.body.token
-        });
-      }
+      const imagen = imagen=req.body.image;
       pool.query('INSERT INTO plantas (nombre, descripcion, precio, stock,imagen, vendedor_id, categoria_id, vivero_id) VALUES (?,?,?,?,?,?,?,?)', [name, description, price, stock,imagen,usuario_id, id_category,vivero_id], async (error, results) => {
         if (error) {
           console.error(error);

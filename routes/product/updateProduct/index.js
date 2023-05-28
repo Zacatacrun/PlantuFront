@@ -12,7 +12,7 @@ router.put('/updateProduct', async (req, res) => {
     const stock = req.body.stock;
     const nombre = req.body.nombre;
     const descripcion = req.body.descripcion;
-    const imagen = req.imagen;
+    const imagen = req.body.image;
     if (!req.body.id || !req.body.token) {
         return res.status(400).json({
         status: 0,
@@ -31,7 +31,7 @@ router.put('/updateProduct', async (req, res) => {
             info: 'El producto no existe o no se encuentra disponible',
         });
     }
-    const usuarioVivero= await getIds.getViveroData(pool, req.body.token);
+    const usuarioVivero= await getIds.getViveroData(pool, req.body.token);  
     if (!usuarioVivero || !Object.keys(usuarioVivero).length) {
         return res.status(404).json({
             status: 0,
@@ -50,21 +50,8 @@ router.put('/updateProduct', async (req, res) => {
     }
     try {
         let query = 'UPDATE plantas SET';
-        if (imagen) {
-        const imagenN = image.uploadImage(imagen);
-        if (!imagenN) {
-            return res.status(400).json({
-            status: 0,
-            data: [],
-            warnings: ['Error al subir la imagen'],
-            info: 'Error interno, intentalo de nuevo',
-            });
-        }
-        const imagenActual = await pool.query('SELECT imagen FROM plantas WHERE id = ?', [productId]);
-        if (imagenActual) {
-            image.deleteImage(imagenActual[0].imagen);
-        }
-        query += ` imagen = '${imagenN}',`;
+        if (!!imagen) { // Si la imagen no es nula
+            query += ` imagen = '${imagen}',`;
         }
 
         if (precio) {
