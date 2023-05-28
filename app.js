@@ -9,6 +9,7 @@ let dotenv = require('dotenv');
 let session = require('express-session');
 
 let indexRouter = require('./routes/index');
+let fillRouter = require('./routes/fill');
 let apiRouter = require('./routes/api');
 let joinRouter = require('./routes/join/join');
 let subscribeRouter = require('./routes/bulletin/subscribe');
@@ -53,15 +54,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors())
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
+app.use('/api/fill', fillRouter);
 app.use('/api/join', joinRouter);
 app.use('/api/join', getViveroRouter);
 app.use('/api/bulletin', subscribeRouter);
-app.use('/api/bulletin',unsubscribeRouter);
+app.use('/api/bulletin', unsubscribeRouter);
 app.use('/api/account', singInRouter);
 app.use('/api/account', logOutRouter);
 app.use('/api/account', deleteAccountRouter);
 app.use('/api/account', logInRouter);
-app.use('/api/account',validateEmailRouter);
+app.use('/api/account', validateEmailRouter);
 app.use('/api/cart', addItemRouter);
 app.use('/api/cart', deleteItemRouter);
 app.use('/api/cart', updateItemRouter);
@@ -105,10 +107,10 @@ app.use(session({
   saveUninitialized: true
 }));
 
-app.listen(2000, function () {
+app.listen(2000, function() {
   console.log('Example app listening on port 2000!');
 });
-dotenv.config({path:'./.env'});
+dotenv.config({ path: './.env' });
 
 module.exports = app;
 
