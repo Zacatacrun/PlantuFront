@@ -74,6 +74,7 @@ router.put('/updateProduct', async (req, res) => {
         if (query.endsWith(',')) {
         query = query.slice(0, -1); // Eliminar la última coma
         }
+        query += ` WHERE id = ${productId}`;
         await pool.query(query);
         const productoActualizado = await pool.query('SELECT * FROM plantas WHERE id = ?', [productId]);
         if (!productoActualizado || !Object.keys(productoActualizado).length) {
