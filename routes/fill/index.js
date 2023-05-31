@@ -6,16 +6,6 @@ router.get(
   "/9a033a567c2f1efe0645cdd8671ba91f34dcb410f250132e1e02d00675e21497",
   async (req, res) => {
     try {
-      //delete products
-      await pool.query("DELETE FROM plantas");
-      //delete viveros
-      await pool.query("DELETE FROM viveros");
-      //delete categories
-      await pool.query("DELETE FROM categorias");
-      //delete users
-      await pool.query("DELETE FROM usuarios");
-
-      // add users
       for (let i = 0; i < 100; i++) {
         const newUser = {
           nombre: `user${i}`,
