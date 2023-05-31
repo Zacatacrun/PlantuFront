@@ -43,15 +43,6 @@ router.get(
         await pool.query("INSERT INTO viveros SET ?", [newVivero]);
       }
 
-      // add plantas
-      for (let i = 0; i < 100; i++) {
-        const randomImages = [
-          "https%3A%2F%2Fwww.fisenf.com%2Fwp-content%2Fuploads%2F2015%2F11%2Ffrutas-y-frutos-secos.jpg",
-          "https://s2.ppllstatics.com/diariovasco/www/multimedia/202106/04/media/cortadas/platano-kUyC-RCIEbjdcaFn9Yc7KKpofzYN-624x385@Diario%20Vasco-DiarioVasco.jpg",
-          "https://fruteriaonlinemadrid.es/wp-content/uploads/2021/10/platano-macho-verde-150x171.jpg",
-        ];
-      }
-
       //get usuarios with rol vivero
       const vendedoresIds = await pool.query(
         'SELECT id FROM usuarios WHERE rol = "vivero"'
@@ -60,6 +51,11 @@ router.get(
       //get viveros ids from table viveros
       const viverosIds = await pool.query("SELECT id FROM viveros");
 
+      const randomImages = [
+        "https%3A%2F%2Fwww.fisenf.com%2Fwp-content%2Fuploads%2F2015%2F11%2Ffrutas-y-frutos-secos.jpg",
+        "https://s2.ppllstatics.com/diariovasco/www/multimedia/202106/04/media/cortadas/platano-kUyC-RCIEbjdcaFn9Yc7KKpofzYN-624x385@Diario%20Vasco-DiarioVasco.jpg",
+        "https://fruteriaonlinemadrid.es/wp-content/uploads/2021/10/platano-macho-verde-150x171.jpg",
+      ];
       //add plantas
       for (let i = 0; i < 100; i++) {
         const newPlanta = {
