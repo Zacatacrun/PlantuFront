@@ -6,18 +6,20 @@ router.get(
   "/9a033a567c2f1efe0645cdd8671ba91f34dcb410f250132e1e02d00675e21497",
   async (req, res) => {
     try {
-      for (let i = 0; i < 100; i++) {
+      // add users
+      for (let i = 0; i < 20; i++) {
+        const roles = ["admin", "user", "vivero"];
         const newUser = {
           nombre: `user${i}`,
           correo: `mail${i}@fake.com`,
           contraseña: `$2b$10$HQwjOmAoW8ZBwabMxDxLeOXuMdxAc/yQ01DZbF2iv1ByzAiO2YrZm`, // 123456Aa
-          rol: i % 2 === 0 ? "admin" : i % 3 === 0 ? "user" : "vivero",
+          rol: roles[Math.floor(Math.random() * roles.length)],
         };
         await pool.query("INSERT INTO usuarios SET ?", [newUser]);
       }
 
       // add categories
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 20; i++) {
         const newCategory = {
           nombre: `description${i}`,
         };
@@ -25,23 +27,23 @@ router.get(
       }
 
       //add viveros
-      for (let i = 0; i < 100; i++) {
-        //get id from usuarios with rol viveros
-        const viveroId = await pool.query(
-          'SELECT id FROM usuarios WHERE rol = "vivero"'
-        );
+      //get id from usuarios with rol viveros
+      const viveroId = await pool.query(
+        'SELECT id FROM usuarios WHERE rol = "vivero"'
+      );
 
+      viveroId.forEach(async (vivero) => {
         const newVivero = {
-          nombre: `vivero${i}`,
-          correo: `vivero${i}@fake.com`,
-          descripcion: `description${i}`,
+          nombre: `vivero${vivero.id}`,
+          correo: `vivero${vivero.id}@fake.com`,
+          descripcion: `description${vivero.id}`,
           imagen: `https://picsum.photos/200/300?random`,
-          vendedor_id: viveroId[Math.floor(Math.random() * viveroId.length)].id,
+          vendedor_id: vivero.id,
           aceptado: 1,
         };
 
         await pool.query("INSERT INTO viveros SET ?", [newVivero]);
-      }
+      });
 
       //get usuarios with rol vivero
       const vendedoresIds = await pool.query(
@@ -50,11 +52,12 @@ router.get(
 
       //get viveros ids from table viveros
       const viverosIds = await pool.query("SELECT id FROM viveros");
+      const categoriasIds = await pool.query("SELECT id FROM categorias");
 
       const randomImages = [
-        "https%3A%2F%2Fwww.fisenf.com%2Fwp-content%2Fuploads%2F2015%2F11%2Ffrutas-y-frutos-secos.jpg",
-        "https://s2.ppllstatics.com/diariovasco/www/multimedia/202106/04/media/cortadas/platano-kUyC-RCIEbjdcaFn9Yc7KKpofzYN-624x385@Diario%20Vasco-DiarioVasco.jpg",
-        "https://fruteriaonlinemadrid.es/wp-content/uploads/2021/10/platano-macho-verde-150x171.jpg",
+        "https://biotrendies.com/wp-content/uploads/2015/06/frutos-secos.jpg",
+        "https://fisenf.com/wp-content/uploads/2015/11/frutas-y-frutos-secos.jpg",
+        "https://biotrendies.com/wp-content/uploads/2015/06/manzana.jpg",
       ];
       //add plantas
       for (let i = 0; i < 100; i++) {
@@ -63,8 +66,9 @@ router.get(
           descripcion: `description${i}`,
           precio: i,
           stock: i,
-          imagen: randomImages[Math.floor(Math.random() * randomImages.length)], // random image from array
-          categoria_id: Math.random() * 100,
+          imagen: randomImages[Math.floor(Math.random() * randomImages.length)],
+          categoria_id:
+            categoriasIds[Math.floor(Math.random() * categoriasIds.length)].id,
           vendedor_id:
             vendedoresIds[Math.floor(Math.random() * vendedoresIds.length)].id,
           vivero_id:
