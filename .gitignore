@@ -110,5 +110,3 @@ dist
 *.lock
 package-lock.json
 
-# cloudinary config
-config.json
