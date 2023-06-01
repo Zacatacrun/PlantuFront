@@ -7,10 +7,17 @@ const { body, validationResult } = require("express-validator");
 const { isEmail } = require("validator");
 const mail = require("../../../SendEmail");
 
-/* GET home page. */
-router.get("/signIn", function (req, res, next) {
-  res.render("index", { title: "signIn" });
-});
+const ERROR_MESSAGES = {
+  INTERNAL_ERROR: "Error interno, intentalo de nuevo",
+  MISSING_FIELDS: "Faltan campos obligatorios",
+  INVALID_EMAIL: "El correo no es válido",
+  USER_ALREADY_REGISTERED: "El usuario ya se encuentra registrado",
+  USER_ALREADY_PENDING_VALIDATION: "El usuario ya tiene una solicitud de validación pendiente",
+  EMAIL_SENDING_ERROR: "Error al enviar el correo electrónico",
+  EMAIL_PROVIDER_NOT_SUPPORTED: "El proveedor de correo electrónico no es compatible",
+  VALIDATION_EMAIL_SENT: "Se ha enviado un correo electrónico de validación",
+  DATABASE_ERROR: "Error interno en la base de datos"
+};
 
 router.post(
   "/signIn",
@@ -53,151 +60,117 @@ router.post(
       .withMessage("El rol no puede tener más de 50 caracteres")
       .escape(),
   ],
-  function (req, res, next) {
-    // Verificar si existen errores de validación
+  async (req, res) => {
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
         status: 0,
         data: [],
         warnings: errors.array().map((e) => e.msg),
-        info: "Error interno, intentalo de nuevo",
+        info: ERROR_MESSAGES.MISSING_FIELDS,
       });
     }
 
     const { name, email, password, rol } = req.body;
-    // Verificar que los campos no estén vacíos
+    console.log(name, email, password, rol+"hola");
     if (!name || !email || !password || !rol) {
+      //crea un mensaje de error indicando que faltan campos obligatorios
+      const error= "Faltan campos: "  + (!name ? "name " : "") + (!email ? "email " : "") + (!password ? "password " : "") + (!rol ? "rol " : "");
       return res.status(400).json({
         status: 0,
         data: [],
-        warnings: ["Faltan campos obligatorios"],
-        info: "Error interno, intentalo de nuevo",
+        warnings: [error],
+        info: ERROR_MESSAGES.MISSING_FIELDS,
       });
     }
 
-    // Validar que el correo sea válido
     if (!isEmail(email)) {
       return res.status(400).json({
         status: 0,
         data: [],
-        warnings: ["El correo electrónico no es válido"],
-        info: "Error interno, intentalo de nuevo",
+        warnings: [ERROR_MESSAGES.INVALID_EMAIL],
+        info: ERROR_MESSAGES.MISSING_FIELDS,
       });
     }
 
-    // Validar que el correo no esté ya registrado
-    pool.query(
-      "SELECT * FROM usuarios WHERE correo = ?",
-      [email],
-      (err, results) => {
-        if (err) {
-          return res.status(500).json({
-            status: 0,
-            data: [],
-            warnings: ["Error interno en la base de datos"],
-            info: "Error interno, intentalo de nuevo",
-          });
-        }
-
-        if (results.length > 0) {
-          return res.status(400).json({
-            status: 0,
-            data: [],
-            warnings: ["El correo electrónico ya está registrado"],
-            info: "Gracias por registrarce",
-          });
-        }
-
-        // Validar que el correo no esté en la tabla porValidar
-        pool.query(
-          "SELECT * FROM porValidar WHERE correo = ?",
-          [email],
-          (err, results) => {
-            if (err) {
-              return res.status(500).json({
-                status: 0,
-                data: [],
-                warnings: ["Error interno en la base de datos"],
-                info: "Error interno, intentalo de nuevo",
-              });
-            }
-
-            if (results.length > 0) {
-              return res.status(200).json({
-                status: 0,
-                data: [],
-                warnings: [
-                  "El correo electrónico ya está en proceso de validación",
-                ],
-                info: "Gracias por registrarce",
-              });
-            }
-
-            // Generar un token único y seguro
-            const token = jwt.sign({ email: email }, process.env.JWT_SECRET, {
-              expiresIn: "1h",
-            });
-
-            // Encriptar la contraseña
-            bcrypt.hash(password, 10, function (err, hash) {
-              if (err) {
-                return res.status(500).json({
-                  status: 0,
-                  data: [],
-                  warnings: ["Error interno al encriptar la contraseña"],
-                  info: "Error interno, intentalo de nuevo",
-                });
-              }
-
-              const expirationDate = new Date();
-              expirationDate.setHours(expirationDate.getHours() + 1);
-
-              const asunto = "Validacion de registro";
-              const mensaje = `Tu código de validación de Plantu es: ${token}`;
-              const merror =
-                "Error al enviar el correo electrónico de confirmación";
-
-              mail
-                .SendEmail(email, asunto, mensaje, merror, res)
-                .then((emailSent) => {
-                  if (emailSent) {
-                    // Insertar el nuevo usuario en la base de datos
-                    pool.query(
-                      "INSERT INTO porValidar (nombre, correo, contraseña,rol,token) VALUES (?, ?, ?, ?, ?)",
-                      [name, email, hash, rol, token],
-                      (err, results) => {
-                        if (err) {
-                          return res.status(500).json({
-                            status: 0,
-                            data: [],
-                            warnings: ["Error interno en la base de datos"],
-                            info: "Error interno, intentalo de nuevo",
-                          });
-                        }
-                        res.status(200).json({
-                          status: 1,
-                          data: [],
-                          warnings: [],
-                          info: "Se ha enviado un correo de confirmación a tu dirección de correo electrónico",
-                        });
-                      }
-                    );
-                  } else {
-                    res.status(400).json({
-                      status: 0,
-                      data: [],
-                      warnings: [],
-                      info: "Proveedor de correo electrónico no compatible",
-                    });
-                  }
-                });
-            });
-          }
-        );
+    try {
+      const userExists = await pool.query(
+        "SELECT * FROM usuarios WHERE correo = ?",
+        [email]
+      );
+      if (userExists.length > 0) {
+        return res.status(400).json({
+          status: 0,
+          data: [],
+          warnings: [ERROR_MESSAGES.USER_ALREADY_REGISTERED],
+          info: "Gracias por registrarse",
+        });
       }
-    );
+
+      const userPending = await pool.query(
+        "SELECT * FROM porValidar WHERE correo = ?",
+        [email]
+      );
+      if (userPending.length > 0) {
+        return res.status(200).json({
+          status: 0,
+          data: [],
+          warnings: [ERROR_MESSAGES.USER_ALREADY_PENDING_VALIDATION],
+          info: "Gracias por registrarse",
+        });
+      }
+
+      const token = jwt.sign({ email: email }, process.env.JW_SECRET, {
+        expiresIn: "1h",
+      });
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const expirationDate = new Date();
+      expirationDate.setHours(expirationDate.getHours() + 1);
+
+      const asunto = "Solicitud de suscripción a Plantu";
+      const mensaje = `<p><strong>Estimado usuario,</strong></p>
+      <p>Gracias por tu interés en PLANT<span style="color:green">U</span>, la página de venta de plantas más verde y fresca del mercado. Para completar tu solicitud de suscripción, por favor ingresa el siguiente código de validación en nuestra página web:</p> <strong>${token}</strong></p>
+      <p>Si no solicitaste una suscripción a PLANT<span style="color:green">U</span>, ignora este mensaje. No es necesario que valides tu sesión ni compartas el código con nadie.</p>
+      <p>
+      Saludos,</p>
+      <p><strong>El equipo de PLANT<span style="color:green">U</span></strong></p>
+      
+      `;
+      const merror = ERROR_MESSAGES.EMAIL_SENDING_ERROR;
+
+      const emailSent = await mail.SendEmail(email, asunto, mensaje, merror, res);
+      if (!emailSent) {
+        return res.status(400).json({
+          status: 0,
+          data: [],
+          warnings: [],
+          info: ERROR_MESSAGES.EMAIL_PROVIDER_NOT_SUPPORTED,
+        });
+      }
+
+      await pool.query(
+        "INSERT INTO porValidar (nombre, correo, contraseña,rol,token) VALUES (?, ?, ?, ?, ?)",
+        [name, email, hashedPassword, rol, token]
+      );
+
+      return res.status(200).json({
+        status: 1,
+        data: [],
+        warnings: [],
+        info: ERROR_MESSAGES.VALIDATION_EMAIL_SENT,
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        status: 0,
+        data: [],
+        warnings: [ERROR_MESSAGES.DATABASE_ERROR],
+        info: ERROR_MESSAGES.INTERNAL_ERROR,
+      });
+    }
   }
 );
-
 module.exports = router;

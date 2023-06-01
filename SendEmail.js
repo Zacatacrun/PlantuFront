@@ -29,7 +29,7 @@ const SendEmail = async(email, asunto, mensaje, merror, res) => {
 
     // Configurar el contenido del correo electrónico
     const info = await transporter.sendMail({
-      from: 'My App noreply@example.com',
+      from: 'PLANTU <plantuapi@gmail.com>',
       to: email,
       subject: asunto,
       html: mensaje
