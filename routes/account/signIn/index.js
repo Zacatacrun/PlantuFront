@@ -121,7 +121,7 @@ router.post(
         });
       }
 
-      const token = jwt.sign({ email: email }, process.env.JW_SECRET, {
+      const token = jwt.sign({ email: email }, process.env.JWT_SECRET, {
         expiresIn: "1h",
       });
 
