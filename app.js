@@ -1,11 +1,10 @@
+let dotenv = require('dotenv');
 let cors = require('cors')
-
 let createError = require('http-errors');
 let express = require('express');
 let path = require('path');
 let cookieParser = require('cookie-parser');
 let logger = require('morgan');
-let dotenv = require('dotenv');
 let session = require('express-session');
 
 let indexRouter = require('./routes/index');
@@ -18,6 +17,7 @@ let singInRouter = require('./routes/account/signIn/');
 let logOutRouter = require('./routes/account/logout/');
 let deleteAccountRouter = require('./routes/account/deleteAccount/');
 let logInRouter = require('./routes/account/login/');
+let RecoverPasswordRouter = require('./routes/account/RecoverPassword/');
 let validateEmailRouter = require('./routes/account/validateEmail');
 let getUserFromTokenRouter = require('./routes/account/getUserFromToken');
 let addItemRouter = require('./routes/cart/addItem/');
@@ -42,13 +42,12 @@ const deleteViveroRouter = require('./routes/join/deleteVivero');
 const getViveroRouter = require('./routes/join/getVivero');
 const getAllProductsByCategoryRouter = require('./routes/products/getProductsByCategory');
 const getCategoriasRouter = require('./routes/products/getCategories');
+
 let app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
-
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -69,6 +68,7 @@ app.use('/api/account', deleteAccountRouter);
 app.use('/api/account', logInRouter);
 app.use('/api/account', validateEmailRouter);
 app.use('/api/account', getUserFromTokenRouter);
+app.use('/api/account',RecoverPasswordRouter);
 app.use('/api/cart', addItemRouter);
 app.use('/api/cart', deleteItemRouter);
 app.use('/api/cart', updateItemRouter);
@@ -90,11 +90,6 @@ app.use('/api/join', updateViveroRouter);
 app.use('/api/join', deleteViveroRouter);
 app.use('/api/products', getAllProductsByCategoryRouter);
 app.use('/api/products', getCategoriasRouter);
-
-
-
-
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
