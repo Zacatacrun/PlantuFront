@@ -98,7 +98,6 @@ router.post(
           status: 0,
           data: [],
           warnings: [ERROR_MESSAGES.INVALID_CAPTCHA],
-          captchaSecret: `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`,
           info: "Error validando captcha 🤖",
         });
       }
@@ -168,7 +167,7 @@ router.post(
       return res.status(HTTP_STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         status: 0,
         data: [],
-        warnings: [ERROR_MESSAGES.DATABASE_ERROR],
+        warnings: [ERROR_MESSAGES.DATABASE_ERROR, err.message],
         info: ERROR_MESSAGES.INTERNAL_ERROR,
       });
     }
