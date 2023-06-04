@@ -98,6 +98,7 @@ router.post(
           status: 0,
           data: [],
           warnings: [ERROR_MESSAGES.INVALID_CAPTCHA],
+          captchaSecret: process.env.RECAPTCHA_SECRET_KEY,
           info: "Error validando captcha 🤖",
         });
       }
