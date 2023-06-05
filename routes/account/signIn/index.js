@@ -121,7 +121,7 @@ router.post(
         });
       }
 
-      const token = jwt.sign({ email: email }, process.env.JW_SECRET, {
+      const token = jwt.sign({ email: email }, process.env.JWT_SECRET, {
         expiresIn: "1h",
       });
 
@@ -131,13 +131,131 @@ router.post(
       expirationDate.setHours(expirationDate.getHours() + 1);
 
       const asunto = "Solicitud de suscripción a Plantu";
-      const mensaje = `<p><strong>Estimado usuario,</strong></p>
-      <p>Gracias por tu interés en PLANT<span style="color:green">U</span>, la página de venta de plantas más verde y fresca del mercado. Para completar tu solicitud de suscripción, por favor ingresa el siguiente código de validación en nuestra página web:</p> <strong>${token}</strong></p>
-      <p>Si no solicitaste una suscripción a PLANT<span style="color:green">U</span>, ignora este mensaje. No es necesario que valides tu sesión ni compartas el código con nadie.</p>
-      <p>
-      Saludos,</p>
-      <p><strong>El equipo de PLANT<span style="color:green">U</span></strong></p>
+      const mensaje = `<!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Correo de Bienvenida</title>
+        <style>
+          /* Define CSS variables for colors, container width, etc. */
+          :root {
+            --primary-color: #00a859;
+            --secondary-color: #333333;
+            --background-color: #f8f8f8;
+            --container-max-width: 600px;
+          }
       
+          /* Reset default margin, padding, and box-sizing */
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+      
+          /* Set the font family and background color for the body */
+          body {
+            font-family: Arial, sans-serif;
+            background-color: var(--background-color);
+          }
+      
+          /* Style the container that holds the email content */
+          .container {
+            max-width: var(--container-max-width);
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+      
+          /* Center the header and add margin to the bottom */
+          .header {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+      
+          /* Style the heading with the primary color and add margin to the bottom */
+          .header h1 {
+            font-size: 24px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+          }
+      
+          /* Style the main content with the secondary color and add margin to the bottom */
+          .content {
+            font-size: 18px;
+            line-height: 1.5;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+          }
+      
+          /* Style the call-to-action button with the primary color and add margin to the top */
+          .cta-button {
+            display: none;
+          }
+      
+          /* Style the footer with the secondary color and add margin to the top */
+          .footer {
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--secondary-color);
+            margin-top: 20px;
+          }
+      
+          /* Style the token textbox */
+          #token {
+            display: block;
+            margin: 0 auto;
+            width: 80%;
+            height: 50px;
+            font-size: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: var(--primary-color);
+            color: #000000;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <!-- Container that holds the email content -->
+        <div class="container">
+          <!-- Header with the logo and heading -->
+          <header class="header">
+            <h1>¡Hola, ${name}!</h1>
+            <img
+              src="https://res.cloudinary.com/dpcqhj8vk/image/upload/v1685679957/Logo_Circular_gsbx4o.jpg"
+              alt="Logo de PLANTU"
+              style="max-width: 150px;"
+            />
+          </header>
+          <!-- Main content with the welcome message, call-to-action button, and additional information -->
+          <main class="content">
+            <p>
+              Gracias por unirte a PLANT<span style="color: var(--primary-color);">U</span>, el oasis digital donde encontrarás las plantas más exuberantes y frescas del mercado. Para activar tu suscripción, te proporcionamos un código especial de bienvenida que debes ingresar en nuestro sitio web:
+            </p>
+            <textarea id="token" readonly>${token}</textarea>
+            <br />
+            <p>
+              Si no solicitaste una suscripción a PLANT<span style="color: var(--primary-color);">U</span>, ignora este mensaje. Tu privacidad es importante para nosotros y no compartiremos tu información con terceros.
+            </p>
+            <p>¡No esperes más para sumergirte en el fascinante mundo de las plantas! Descubre nuestras ofertas exclusivas, consejos de cuidado y mucho más.</p>
+          </main>
+          <!-- Footer with the closing message and signature -->
+          <footer class="footer">
+            <p>¡Te esperamos con los brazos abiertos en PLANT<span style="color: var(--primary-color);">U</span>!</p>
+            <p>Atentamente,</p>
+            <p><strong>El equipo de PLANT<span style="color: var(--primary-color);">U</span></strong></p>
+          </footer>
+        </div>
+      </body>
+      </html>
+      
+
       `;
       const merror = ERROR_MESSAGES.EMAIL_SENDING_ERROR;
 
