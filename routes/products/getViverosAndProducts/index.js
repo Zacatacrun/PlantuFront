@@ -31,33 +31,36 @@ router.get("/getViverosAndProducts", async (req, res) => {
       //convertir la respuesta de la base de datos a json
       const viverosR = JSON.parse(JSON.stringify(viverosResponse));
       // Convertir los resultados a la estructura solicitada
-      const viveros = [];
       let currentVivero = null;
       //imprimir viverosResponse
 
-      for (const planta of viverosR) {
-        //conseguir el vivero actual sacando el id del vivero de la planta y buscando en el json viveros
-        current = viverosRE.find((vivero) => vivero.id === planta.vivero_id);
-        currentVivero = {
-          nombre: current.nombre,
-          imagen: current.imagen,
-          productos: [],
-        };
+      const viveros = [];
 
-        viveros.push(currentVivero);
+for (const vivero of viverosRE) {
+  const currentVivero = {
+    nombre: vivero.nombre,
+    imagen: vivero.imagen,
+    productos: [],
+  };
 
-        currentVivero.productos.push({
-          id: planta.id,
-          nombre: planta.nombre,
-          descripcion: planta.descripcion,
-          vendedor_id: planta.vendedor_id,
-          precio: planta.precio,
-          stock: planta.stock,
-          imagen: planta.imagen,
-          categoria_id: planta.categoria_id,
-          vivero_id: planta.vivero_id,
-        });
-      }
+  for (const planta of viverosR) {
+    if (planta.vivero_id === vivero.id) {
+      currentVivero.productos.push({
+        id: planta.id,
+        nombre: planta.nombre,
+        descripcion: planta.descripcion,
+        vendedor_id: planta.vendedor_id,
+        precio: planta.precio,
+        stock: planta.stock,
+        imagen: planta.imagen,
+        categoria_id: planta.categoria_id,
+        vivero_id: planta.vivero_id,
+      });
+    }
+  }
+
+  viveros.push(currentVivero);
+}
 
       return res.status(200).json({
         status: 0,
